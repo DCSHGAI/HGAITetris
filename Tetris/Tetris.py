@@ -16,10 +16,37 @@ colors = [
     (180, 34, 122),
 ]
 
-
 class Figure:
     x = 0
     y = 0
+
+    # There are 7 blocks currently you can add your own.
+    # Blocks are defined in a grid that looks like this
+    #
+    # ~~~~~~~~~~~~~
+    # |0 |1 |2 |3 |
+    # |4 |5 |6 |7 |
+    # |8 |9 |10|11|
+    # |12|13|14|15|
+    # ~~~~~~~~~~~~~
+    # 
+    # The first figure is defined as 1, 5, 9, 13 which when applied to the grid makes the straight line figure
+    # 
+    # ~~~~~~~~~~~~~
+    # |  |1 |  |  |
+    # |  |5 |  |  |
+    # |  |9 |  |  |
+    # |  |13|  |  |
+    # ~~~~~~~~~~~~~
+    #
+    # The following arrays are the rotations that the shape can have so for the bar it can only
+    # be up and down and on its side. The side rotation looks like
+    # ~~~~~~~~~~~~~
+    # |  |  |  |  |
+    # |4 |5 |6 |7 |
+    # |  |  |  |  |
+    # |  |  |  |  |
+    # ~~~~~~~~~~~~~
 
     figures = [
         [[1, 5, 9, 13], [4, 5, 6, 7]],
@@ -31,6 +58,7 @@ class Figure:
         [[1, 2, 5, 6]],
     ]
 
+    # The x and y values determine where the figure will appear on the screen
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -44,6 +72,7 @@ class Figure:
     def rotate(self):
         self.rotation = (self.rotation + 1) % len(self.figures[self.type])
 
+
 class Tetris:
     level = 2
     score = 0
@@ -55,7 +84,8 @@ class Tetris:
     y = 60
     zoom = 20
     figure = None
-
+    figure_queue = []
+ 
     def __init__(self, height, width):
         self.height = height
         self.width = width
@@ -69,7 +99,10 @@ class Tetris:
             self.field.append(new_line)
 
     def new_figure(self):
-        self.figure = Figure(3, 0)
+        while len(self.figure_queue) < 3:
+            self.figure_queue.append(Figure(3,0))
+
+        self.figure = self.figure_queue.pop(0)
 
     def intersects(self):
         intersection = False
@@ -138,8 +171,8 @@ class Tetris:
     def update_score(self, score_to_add):
         self.score += score_to_add
 
-    def state_evaluation():
-        print("Do something based on the state here")
+    def state_evaluation(self):
+        print("Do something based on the state here in state_evaluation")
 
 # Initialize the game engine (Do not delete)
 pygame.init()
@@ -223,6 +256,8 @@ while not done:
     if game.state == "gameover":
         screen.blit(text_game_over, [20, 200])
         screen.blit(text_game_over1, [25, 265])
+
+    game.state_evaluation()
 
     pygame.display.flip()
     clock.tick(fps)
