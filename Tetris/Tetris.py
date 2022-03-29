@@ -99,7 +99,7 @@ class Tetris:
             self.field.append(new_line)
 
     def new_figure(self):
-        while len(self.figure_queue) < 3:
+        while len(self.figure_queue) < 4:
             self.figure_queue.append(Figure(3,0))
 
         self.figure = self.figure_queue.pop(0)
@@ -167,12 +167,50 @@ class Tetris:
         if self.intersects():
             self.figure.rotation = old_rotation
 
+    def encourage(self, score_to_add):
+        self.update_score(score_to_add)
+    
+    def discourage(self, score_to_add):
+        self.update_score(score_to_add)
+
+
     # Modify this to change how scoring works
     def update_score(self, score_to_add):
         self.score += score_to_add
 
     def state_evaluation(self):
         print("Do something based on the state here in state_evaluation")
+        # Self.field contains the playing field if there is a non-zero number in the array
+        # then that space is occupied by a shape.
+
+    def draw_queue(self, figure, position_in_queue, screen):
+        color = colors[figure.color]
+        if figure.type == 0:
+            # Column
+            pygame.draw.rect(screen, color, (350, (position_in_queue * 100) + 50, 100, 25))
+        elif figure.type == 1:
+            # Slide
+            pygame.draw.rect(screen, color, (350, (position_in_queue * 100) + 50, 50, 25))
+            pygame.draw.rect(screen, color, (375, (position_in_queue * 100) + 75, 50, 25))
+        elif figure.type == 2:
+            # Other Slide
+            pygame.draw.rect(screen, color, (350, (position_in_queue * 100) + 75, 50, 25))
+            pygame.draw.rect(screen, color, (375, (position_in_queue * 100) + 50, 50, 25))
+        elif figure.type == 3:
+            # Bottom L
+            pygame.draw.rect(screen, color, (350, (position_in_queue * 110) + 50, 25, 50))
+            pygame.draw.rect(screen, color, (350, (position_in_queue * 110) + 25, 50, 25))
+        elif figure.type == 4:
+            # Top L
+            pygame.draw.rect(screen, color, (375, (position_in_queue * 100) + 50, 25, 75))
+            pygame.draw.rect(screen, color, (350, (position_in_queue * 100) + 50, 25, 25))
+        elif figure.type == 5:
+            # Half Plus
+            pygame.draw.rect(screen, color, (350, (position_in_queue * 100) + 75, 75, 25))
+            pygame.draw.rect(screen, color, (375, (position_in_queue * 100) + 50, 25, 50))
+        elif figure.type == 6:
+            #Square
+             pygame.draw.rect(screen, color, (375, (position_in_queue * 100) + 50, 50, 50))
 
 # Initialize the game engine (Do not delete)
 pygame.init()
@@ -183,7 +221,7 @@ WHITE = (255, 255, 255)
 GRAY = (128, 128, 128)
 
 # Define the screen size and settings
-size = (400, 500)
+size = (500, 500)
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("ARL A.I Tetris")
 done = False
@@ -222,6 +260,10 @@ while not done:
                 game.go_space()
             if event.key == pygame.K_ESCAPE:
                 game.__init__(20, 10)
+            if event.key == pygame.K_w:
+                game.encourage(1)
+            if event.key == pygame.K_s:
+                game.discourage(-1)            
 
     if event.type == pygame.KEYUP:
             if event.key == pygame.K_DOWN:
@@ -251,6 +293,14 @@ while not done:
     text = font.render("Score: " + str(game.score), True, BLACK)
     text_game_over = font1.render("Game Over", True, (255, 125, 0))
     text_game_over1 = font1.render("Press ESC", True, (255, 215, 0))
+
+
+    if game.figure_queue[0].type is not None:
+        game.draw_queue(game.figure_queue[0], 0, screen)
+    if game.figure_queue[1].type is not None:
+        game.draw_queue(game.figure_queue[1], 1, screen)
+    if game.figure_queue[2].type is not None:
+        game.draw_queue(game.figure_queue[2], 2, screen)
 
     screen.blit(text, [0, 0])
     if game.state == "gameover":
