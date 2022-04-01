@@ -20,6 +20,8 @@ class Figure:
     x = 0
     y = 0
 
+    # Add new pieces here
+    #
     # There are 7 blocks currently you can add your own.
     # Blocks are defined in a grid that looks like this
     #
@@ -179,9 +181,22 @@ class Tetris:
         self.score += score_to_add
 
     def state_evaluation(self):
-        print("Do something based on the state here in state_evaluation")
         # Self.field contains the playing field if there is a non-zero number in the array
         # then that space is occupied by a shape.
+
+        # This function tries to move pieces as far to the left as possible without overlapping.
+       
+        # Check down and to the left to see if its clear for an object
+        field_index_to_check_y = (self.figure.y + 1) % 20
+        field_index_to_check_x = (self.figure.x - 1) % 10
+
+        if(self.field[field_index_to_check_y][field_index_to_check_x] == 0):
+            self.go_side(-1)
+        else:
+            self.go_side(2)
+
+        print("Do something based on the state here in state_evaluation")
+
 
     def draw_queue(self, figure, position_in_queue, screen):
         color = colors[figure.color]
@@ -235,7 +250,7 @@ pressing_down = False
 while not done:
     if game.figure is None:
         game.new_figure()
-    counter += 1
+    counter += .25 # Adjust speed here currently set to a quarter of the normal speed
     if counter > 100000:
         counter = 0
 
