@@ -169,6 +169,7 @@ class Tetris:
         if self.intersects():
             self.figure.rotation = old_rotation
 
+    # Use W to encourage the AI and S to discourage it.
     def encourage(self, score_to_add):
         self.update_score(score_to_add)
     
@@ -197,7 +198,7 @@ class Tetris:
 
         print("Do something based on the state here in state_evaluation")
 
-
+    # Draw rectangles off to the right to represent the next 3 shapes in the queue.
     def draw_queue(self, figure, position_in_queue, screen):
         color = colors[figure.color]
         if figure.type == 0:
