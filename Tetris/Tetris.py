@@ -4,6 +4,17 @@
 
 import pygame
 import random
+import sys
+from pywinauto import Application
+
+# Use the number keys to toggle between windows
+def Set_Focus(number_to_focus):
+    try:
+        app = Application().connect(title_re="ARL A.I Tetris " + number_to_focus)
+        dlg = app.top_window()
+        dlg.set_focus()
+    except:
+        print("Game " + number_to_focus + " does not exist.")
 
 # RGB Color definitions
 colors = [
@@ -74,7 +85,6 @@ class Figure:
     def rotate(self):
         self.rotation = (self.rotation + 1) % len(self.figures[self.type])
 
-
 class Tetris:
     level = 2
     score = 0
@@ -87,12 +97,14 @@ class Tetris:
     zoom = 20
     figure = None
     figure_queue = []
+    reward = 0
  
     def __init__(self, height, width):
         self.height = height
         self.width = width
         self.field = []
         self.score = 0
+        self.reward = 0
         self.state = "start"
         for i in range(height):
             new_line = []
@@ -169,14 +181,9 @@ class Tetris:
         if self.intersects():
             self.figure.rotation = old_rotation
 
-    # Use W to encourage the AI and S to discourage it.
     def encourage(self, score_to_add):
-        self.update_score(score_to_add)
-    
-    def discourage(self, score_to_add):
-        self.update_score(score_to_add)
-
-
+        self.reward += score_to_add
+   
     # Modify this to change how scoring works
     def update_score(self, score_to_add):
         self.score += score_to_add
@@ -196,7 +203,7 @@ class Tetris:
         else:
             self.go_side(2)
 
-        print("Do something based on the state here in state_evaluation")
+        #print("Do something based on the state here in state_evaluation")
 
     # Draw rectangles off to the right to represent the next 3 shapes in the queue.
     def draw_queue(self, figure, position_in_queue, screen):
@@ -239,13 +246,20 @@ GRAY = (128, 128, 128)
 # Define the screen size and settings
 size = (500, 500)
 screen = pygame.display.set_mode(size)
-pygame.display.set_caption("ARL A.I Tetris")
+
+# If there aren't arguements just set the panel's name to 1
+if len(sys.argv) != 0:
+    pygame.display.set_caption("ARL A.I Tetris " + str(sys.argv[1]))
+else:
+    pygame.display.set_caption("ARL A.I Tetris 1")
+
 done = False
 clock = pygame.time.Clock()
 fps = 30
 game = Tetris(20, 10)
 counter = 0
 pressing_down = False
+training_model_file_location = ""
 
 # Main game infinite loop
 while not done:
@@ -276,11 +290,29 @@ while not done:
                 game.go_space()
             if event.key == pygame.K_ESCAPE:
                 game.__init__(20, 10)
-            if event.key == pygame.K_w:
+            if event.key == pygame.KSCAN_KP_ENTER:
                 game.encourage(1)
-            if event.key == pygame.K_s:
-                game.discourage(-1)            
-
+            if event.key == pygame.K_0:
+                Set_Focus("0")
+            if event.key == pygame.K_1:
+                Set_Focus("1")           
+            if event.key == pygame.K_2:
+                Set_Focus("2")
+            if event.key == pygame.K_3:
+                Set_Focus("3")
+            if event.key == pygame.K_4:
+                Set_Focus("4")
+            if event.key == pygame.K_5:
+                Set_Focus("5")
+            if event.key == pygame.K_6:
+                Set_Focus("6")
+            if event.key == pygame.K_7:
+                Set_Focus("7")
+            if event.key == pygame.K_8:
+                Set_Focus("8")
+            if event.key == pygame.K_9:
+                Set_Focus("9")
+          
     if event.type == pygame.KEYUP:
             if event.key == pygame.K_DOWN:
                 pressing_down = False

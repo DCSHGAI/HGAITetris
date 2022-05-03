@@ -4,6 +4,4 @@ import subprocess
 NumberOfTetrisGames = 5
 
 for Count in range(NumberOfTetrisGames):
-    subprocess.Popen("Tetris.py", shell=True)
-
-
+    subprocess.Popen("Tetris.py " + str(Count) , shell=True)
