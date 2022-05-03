@@ -292,6 +292,7 @@ while not done:
                 game.__init__(20, 10)
             if event.key == pygame.KSCAN_KP_ENTER:
                 game.encourage(1)
+            # Used number keys to switch panels if they exist
             if event.key == pygame.K_0:
                 Set_Focus("0")
             if event.key == pygame.K_1:
