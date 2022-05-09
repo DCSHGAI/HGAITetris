@@ -7,7 +7,7 @@ import random
 import sys
 from pywinauto import Application
 
-# Use the number keys to toggle between windows
+# Use the number keys 0-9 to toggle between windows
 def Set_Focus(number_to_focus):
     try:
         app = Application().connect(title_re="ARL A.I Tetris " + number_to_focus)
@@ -15,6 +15,12 @@ def Set_Focus(number_to_focus):
         dlg.set_focus()
     except:
         print("Game " + number_to_focus + " does not exist.")
+
+training_model_file_location = ""
+
+# Read the A.I training model and parse it
+def Read_Model():
+    file = open(training_model_file_location, "r")
 
 # RGB Color definitions
 colors = [
@@ -246,10 +252,14 @@ GRAY = (128, 128, 128)
 # Define the screen size and settings
 size = (500, 500)
 screen = pygame.display.set_mode(size)
+game_id = 1
+number_of_games_played = 0
+last_figure_appearance = -1
 
 # If there aren't arguements just set the panel's name to 1
 if len(sys.argv) != 0:
     pygame.display.set_caption("ARL A.I Tetris " + str(sys.argv[1]))
+    game_id = sys.argv[1]
 else:
     pygame.display.set_caption("ARL A.I Tetris 1")
 
@@ -259,12 +269,14 @@ fps = 30
 game = Tetris(20, 10)
 counter = 0
 pressing_down = False
-training_model_file_location = ""
+last_move = ""
+auto_restart = False
 
 # Main game infinite loop
 while not done:
     if game.figure is None:
         game.new_figure()
+        last_figure_appearance = pygame.time.Clock()
     counter += .25 # Adjust speed here currently set to a quarter of the normal speed
     if counter > 100000:
         counter = 0
@@ -282,14 +294,20 @@ while not done:
                 game.rotate()
             if event.key == pygame.K_DOWN:
                 pressing_down = True
+                last_move = "down"
             if event.key == pygame.K_LEFT:
                 game.go_side(-1)
+                last_move = "left"
             if event.key == pygame.K_RIGHT:
                 game.go_side(1)
+                last_move = "right"
             if event.key == pygame.K_SPACE:
                 game.go_space()
+                last_move = "down"
             if event.key == pygame.K_ESCAPE:
                 game.__init__(20, 10)
+                number_of_games_played += 1
+                last_move = "restart"
             if event.key == pygame.KSCAN_KP_ENTER:
                 game.encourage(1)
             # Used number keys to switch panels if they exist
@@ -355,6 +373,9 @@ while not done:
     if game.state == "gameover":
         screen.blit(text_game_over, [20, 200])
         screen.blit(text_game_over1, [25, 265])
+        if auto_restart:
+            game.__init__(20, 10)
+            
 
     game.state_evaluation()
 
