@@ -20,7 +20,7 @@ training_model_file_location = ""
 
 # Read the A.I training model and parse it
 def Read_Model():
-    file = open(training_model_file_location, "r")
+    config = open(training_model_file_location, "r")
 
 # RGB Color definitions
 colors = [
@@ -257,7 +257,7 @@ number_of_games_played = 0
 last_figure_appearance = -1
 
 # If there aren't arguements just set the panel's name to 1
-if len(sys.argv) != 0:
+if len(sys.argv) > 1:
     pygame.display.set_caption("ARL A.I Tetris " + str(sys.argv[1]))
     game_id = sys.argv[1]
 else:

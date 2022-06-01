@@ -1,0 +1,3 @@
+GameInstances=2
+GameSpeed=.25
+QueueSize=4
