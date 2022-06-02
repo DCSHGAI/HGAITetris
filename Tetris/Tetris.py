@@ -4,7 +4,9 @@
 
 import pygame
 import random
+import platform
 import sys
+import re
 from pywinauto import Application
 
 # Use the number keys 0-9 to toggle between windows
@@ -16,11 +18,20 @@ def Set_Focus(number_to_focus):
     except:
         print("Game " + number_to_focus + " does not exist.")
 
-training_model_file_location = ""
-
 # Read the A.I training model and parse it
 def Read_Model():
-    config = open(training_model_file_location, "r")
+    print("Read model here")
+
+game_speed_modifier = .25
+queue_size = 4
+   
+def Read_Config():
+    config = open("Config.txt", "r")
+    lines = config.readlines()
+    if len(lines) == 3:
+        game_speed_modifier = int(re.search(r'\d+', lines[1]).group()) * .01
+        queue_size = int(re.search(r'\d+', lines[2]).group())
+
 
 # RGB Color definitions
 colors = [
@@ -241,6 +252,8 @@ class Tetris:
             #Square
              pygame.draw.rect(screen, color, (375, (position_in_queue * 100) + 50, 50, 50))
 
+Read_Config()
+
 # Initialize the game engine (Do not delete)
 pygame.init()
 
@@ -277,7 +290,7 @@ while not done:
     if game.figure is None:
         game.new_figure()
         last_figure_appearance = pygame.time.Clock()
-    counter += .25 # Adjust speed here currently set to a quarter of the normal speed
+    counter += game_speed_modifier
     if counter > 100000:
         counter = 0
 
@@ -311,25 +324,25 @@ while not done:
             if event.key == pygame.KSCAN_KP_ENTER:
                 game.encourage(1)
             # Used number keys to switch panels if they exist
-            if event.key == pygame.K_0:
+            if event.key == pygame.K_0 and platform.system() == "Windows":
                 Set_Focus("0")
-            if event.key == pygame.K_1:
+            if event.key == pygame.K_1 and platform.system() == "Windows":
                 Set_Focus("1")           
-            if event.key == pygame.K_2:
+            if event.key == pygame.K_2 and platform.system() == "Windows":
                 Set_Focus("2")
-            if event.key == pygame.K_3:
+            if event.key == pygame.K_3 and platform.system() == "Windows":
                 Set_Focus("3")
-            if event.key == pygame.K_4:
+            if event.key == pygame.K_4 and platform.system() == "Windows":
                 Set_Focus("4")
-            if event.key == pygame.K_5:
+            if event.key == pygame.K_5 and platform.system() == "Windows":
                 Set_Focus("5")
-            if event.key == pygame.K_6:
+            if event.key == pygame.K_6 and platform.system() == "Windows":
                 Set_Focus("6")
-            if event.key == pygame.K_7:
+            if event.key == pygame.K_7 and platform.system() == "Windows":
                 Set_Focus("7")
-            if event.key == pygame.K_8:
+            if event.key == pygame.K_8 and platform.system() == "Windows":
                 Set_Focus("8")
-            if event.key == pygame.K_9:
+            if event.key == pygame.K_9 and platform.system() == "Windows":
                 Set_Focus("9")
           
     if event.type == pygame.KEYUP:
