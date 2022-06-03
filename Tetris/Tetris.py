@@ -7,16 +7,13 @@ import random
 import platform
 import sys
 import re
-from pywinauto import Application
 
 # Use the number keys 0-9 to toggle between windows
 def Set_Focus(number_to_focus):
     try:
-        app = Application().connect(title_re="ARL A.I Tetris " + number_to_focus)
-        dlg = app.top_window()
-        dlg.set_focus()
+        print("ARL A.I Tetris " + str(number_to_focus))
     except:
-        print("Game " + number_to_focus + " does not exist.")
+        print("Game " + str(number_to_focus) + " does not exist.")
 
 # Read the A.I training model and parse it
 def Read_Model():
@@ -198,7 +195,7 @@ class Tetris:
         if self.intersects():
             self.figure.rotation = old_rotation
 
-    def encourage(self, score_to_add):
+    def update_reward(self, score_to_add):
         self.reward += score_to_add
    
     # Modify this to change how scoring works
@@ -321,29 +318,29 @@ while not done:
                 game.__init__(20, 10)
                 number_of_games_played += 1
                 last_move = "restart"
-            if event.key == pygame.KSCAN_KP_ENTER:
-                game.encourage(1)
+            if event.key == pygame.K_h:
+                game.update_reward(1)
             # Used number keys to switch panels if they exist
             if event.key == pygame.K_0 and platform.system() == "Windows":
-                Set_Focus("0")
+                Set_Focus(0)
             if event.key == pygame.K_1 and platform.system() == "Windows":
-                Set_Focus("1")           
+                Set_Focus(1)
             if event.key == pygame.K_2 and platform.system() == "Windows":
-                Set_Focus("2")
+                print("0")
             if event.key == pygame.K_3 and platform.system() == "Windows":
-                Set_Focus("3")
+                print("0")
             if event.key == pygame.K_4 and platform.system() == "Windows":
-                Set_Focus("4")
+                print("0")
             if event.key == pygame.K_5 and platform.system() == "Windows":
-                Set_Focus("5")
+                print("0")
             if event.key == pygame.K_6 and platform.system() == "Windows":
-                Set_Focus("6")
+                print("0")
             if event.key == pygame.K_7 and platform.system() == "Windows":
-                Set_Focus("7")
+                print("0")
             if event.key == pygame.K_8 and platform.system() == "Windows":
-                Set_Focus("8")
+                print("0")
             if event.key == pygame.K_9 and platform.system() == "Windows":
-                Set_Focus("9")
+                print("0")
           
     if event.type == pygame.KEYUP:
             if event.key == pygame.K_DOWN:
@@ -373,6 +370,7 @@ while not done:
     text = font.render("Score: " + str(game.score), True, BLACK)
     text_game_over = font1.render("Game Over", True, (255, 125, 0))
     text_game_over1 = font1.render("Press ESC", True, (255, 215, 0))
+    reward_text = font.render("Reward: " + str(game.reward), True, BLACK)
 
 
     if game.figure_queue[0].type is not None:
@@ -383,6 +381,7 @@ while not done:
         game.draw_queue(game.figure_queue[2], 2, screen)
 
     screen.blit(text, [0, 0])
+    screen.blit(reward_text, [0, 25])
     if game.state == "gameover":
         screen.blit(text_game_over, [20, 200])
         screen.blit(text_game_over1, [25, 265])
