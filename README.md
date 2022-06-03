@@ -9,6 +9,5 @@ Instructions to Run
  Windows = py -m pip install -U pygame --user
  Mac = python3 -m pip install -U pygame --user
  (Or use pip install pygame)
-4. If you are missing any other packages install them as well (Panel switching is Windows only and uses the pyWIN32 API)
-5. Run the RunTetrisGames.py to spool up multiple games either in editor or by double clicking on the RunTetrisGames.py script
-6. Run Tetris.py to run a single instance of the game either in editor or by double clicking on it
+4. Run the RunTetrisGames.py to spool up multiple games either in editor or by double clicking on the RunTetrisGames.py script
+5. (OR) Run Tetris.py to run a single instance of the game either in editor or by double clicking on it
