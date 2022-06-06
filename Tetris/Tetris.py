@@ -8,9 +8,18 @@ import platform
 import sys
 import re
 
+# This is an optional import that allows you to switch panels with the number keys (Windows Only)
+try:
+    from pywinauto import Application
+except ImportError:
+    print("Could not import pywinauto")
+
 # Use the number keys 0-9 to toggle between windows
 def Set_Focus(number_to_focus):
     try:
+        app = Application().connect(title_re="ARL A.I Tetris " + str(number_to_focus))
+        dlg = app.top_window()
+        dlg.set_focus()
         print("ARL A.I Tetris " + str(number_to_focus))
     except:
         print("Game " + str(number_to_focus) + " does not exist.")
@@ -26,8 +35,10 @@ def Read_Config():
     config = open("Config.txt", "r")
     lines = config.readlines()
     if len(lines) == 3:
-        game_speed_modifier = int(re.search(r'\d+', lines[1]).group()) * .01
-        queue_size = int(re.search(r'\d+', lines[2]).group())
+       global game_speed_modifier
+       game_speed_modifier = int(re.search(r'\d+', lines[1]).group()) * .01
+       global queue_size
+       queue_size = int(re.search(r'\d+', lines[2]).group())
 
 
 # RGB Color definitions
@@ -205,19 +216,7 @@ class Tetris:
     def state_evaluation(self):
         # Self.field contains the playing field if there is a non-zero number in the array
         # then that space is occupied by a shape.
-
-        # This function tries to move pieces as far to the left as possible without overlapping.
-       
-        # Check down and to the left to see if its clear for an object
-        field_index_to_check_y = (self.figure.y + 1) % 20
-        field_index_to_check_x = (self.figure.x - 1) % 10
-
-        if(self.field[field_index_to_check_y][field_index_to_check_x] == 0):
-            self.go_side(-1)
-        else:
-            self.go_side(2)
-
-        #print("Do something based on the state here in state_evaluation")
+        a = 1
 
     # Draw rectangles off to the right to represent the next 3 shapes in the queue.
     def draw_queue(self, figure, position_in_queue, screen):
@@ -248,6 +247,9 @@ class Tetris:
         elif figure.type == 6:
             #Square
              pygame.draw.rect(screen, color, (375, (position_in_queue * 100) + 50, 50, 50))
+
+    def forward_projection(self):
+        print("Moves")
 
 Read_Config()
 
@@ -326,21 +328,21 @@ while not done:
             if event.key == pygame.K_1 and platform.system() == "Windows":
                 Set_Focus(1)
             if event.key == pygame.K_2 and platform.system() == "Windows":
-                print("0")
+                Set_Focus(2)
             if event.key == pygame.K_3 and platform.system() == "Windows":
-                print("0")
+                Set_Focus(3)
             if event.key == pygame.K_4 and platform.system() == "Windows":
-                print("0")
+                Set_Focus(4)
             if event.key == pygame.K_5 and platform.system() == "Windows":
-                print("0")
+                Set_Focus(5)
             if event.key == pygame.K_6 and platform.system() == "Windows":
-                print("0")
+                Set_Focus(6)
             if event.key == pygame.K_7 and platform.system() == "Windows":
-                print("0")
+                Set_Focus(7)
             if event.key == pygame.K_8 and platform.system() == "Windows":
-                print("0")
+                Set_Focus(8)
             if event.key == pygame.K_9 and platform.system() == "Windows":
-                print("0")
+                Set_Focus(9)
           
     if event.type == pygame.KEYUP:
             if event.key == pygame.K_DOWN:

@@ -1,5 +1,6 @@
 import subprocess
 import re
+import platform
 
 # Read config file
 config = open("Config.txt", "r")
@@ -9,5 +10,9 @@ games = int(re.search(r'\d+', line).group())
 # Change this to control how many times the game is run
 NumberOfTetrisGames = games
 
+# If Python is not an e
 for Count in range(NumberOfTetrisGames):
-    subprocess.Popen("Tetris.py " + str(Count) , shell=True)
+    if  platform.system() == "Windows":
+        subprocess.Popen(".\Tetris.py " + str(Count) , shell=True)
+    else:
+        subprocess.Popen("#!/usr/bin/env python Tetris.py " + str(Count) , shell=True)
