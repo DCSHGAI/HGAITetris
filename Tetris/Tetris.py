@@ -8,6 +8,16 @@ import platform
 import sys
 import re
 
+game_speed_modifier = .25
+queue_size = 4
+Is_Master = False
+Should_Load_Model = False
+Activate_Hidden_Rule = False
+Activate_Hidden_Piece = False
+Activate_Hidden_Delay = 60
+Speed_Increase = False
+
+
 # This is an optional import that allows you to switch panels with the number keys (Windows Only)
 try:
     from pywinauto import Application
@@ -45,7 +55,7 @@ class Figure:
 
     # Add new pieces here
     #
-    # There are 7 blocks currently you can add your own.
+    # There are 8 blocks currently you can add your own.
     # Blocks are defined in a grid that looks like this
     #
     # ~~~~~~~~~~~~~
@@ -81,13 +91,17 @@ class Figure:
         [[1, 2, 6, 10], [5, 6, 7, 9], [2, 6, 10, 11], [3, 5, 6, 7]],
         [[1, 4, 5, 6], [1, 4, 5, 9], [4, 5, 6, 9], [1, 5, 6, 9]],
         [[1, 2, 5, 6]],
+        [[1,4,5,9,6]]
     ]
 
     # The x and y values determine where the figure will appear on the screen
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.type = random.randint(0, len(self.figures) - 1)
+        if(Activate_Hidden_Piece):
+             self.type = random.randint(0, len(self.figures) - 1)
+        else:
+            self.type = random.randint(0, len(self.figures) - 2)
         self.color = random.randint(1, len(colors) - 1)
         self.rotation = 0
 
@@ -153,6 +167,8 @@ class Tetris:
                 for i1 in range(i, 1, -1):
                     for j in range(self.width):
                         self.field[i1][j] = self.field[i1 - 1][j]
+                Find_Area(self)
+
         # This is the base scoring system move or change this to modify how your score updates
         self.update_score(lines ** 2)
 
@@ -265,14 +281,6 @@ pressing_down = False
 last_move = ""
 auto_restart = False
 
-game_speed_modifier = .25
-queue_size = 4
-Is_Master = False
-Should_Load_Model = False
-Activate_Hidden_Rule = False
-Activate_Hidden_Piece = False
-Activate_Hidden_Delay = 60
-Speed_Increase = False
    
 def Read_Config():
     config = open("Config.txt", "r")
@@ -306,9 +314,17 @@ def Read_Config():
             Speed_Increase = False
        Activate_Hidden_delay = int(re.search(r'\d+', lines[11]).group())
 
+def Find_Area(game):
+    if(Activate_Hidden_Rule):
+        Area = 0
+        for row in game.field:
+            for position in row:
+                if position > 1:
+                    Area += 1
+        if(Area > 40):
+            game.score += 100
 
 Read_Config()
-print(Activate_Hidden_Delay)
 
 # Main game infinite loop
 while not done:
@@ -418,7 +434,6 @@ while not done:
             
 
     game.state_evaluation()
-
     pygame.display.flip()
     clock.tick(fps)
 
