@@ -1,3 +1,13 @@
 GameInstances=10
 GameSpeed=250000
 QueueSize=4
+Master
+False,False,True,False,True,False,True,False,True,False
+HiddenRule
+False,False,True,False,True,False,True,False,True,False
+HiddenPiece
+False,False,True,False,True,False,True,False,True,False
+IncreaseSpeedOverTime
+False,False,True,False,True,False,True,False,True,False
+TimeToActivateHiddenPiece=55
+LoadModel=True

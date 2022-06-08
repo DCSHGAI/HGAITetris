@@ -28,19 +28,6 @@ def Set_Focus(number_to_focus):
 def Read_Model():
     print("Read model here")
 
-game_speed_modifier = .25
-queue_size = 4
-   
-def Read_Config():
-    config = open("Config.txt", "r")
-    lines = config.readlines()
-    if len(lines) == 3:
-       global game_speed_modifier
-       game_speed_modifier = int(re.search(r'\d+', lines[1]).group()) * .01
-       global queue_size
-       queue_size = int(re.search(r'\d+', lines[2]).group())
-
-
 # RGB Color definitions
 colors = [
     (0, 0, 0),
@@ -140,7 +127,6 @@ class Tetris:
     def new_figure(self):
         while len(self.figure_queue) < 4:
             self.figure_queue.append(Figure(3,0))
-
         self.figure = self.figure_queue.pop(0)
 
     def intersects(self):
@@ -248,11 +234,6 @@ class Tetris:
             #Square
              pygame.draw.rect(screen, color, (375, (position_in_queue * 100) + 50, 50, 50))
 
-    def forward_projection(self):
-        print("Moves")
-
-Read_Config()
-
 # Initialize the game engine (Do not delete)
 pygame.init()
 
@@ -264,16 +245,16 @@ GRAY = (128, 128, 128)
 # Define the screen size and settings
 size = (500, 500)
 screen = pygame.display.set_mode(size)
-game_id = 1
+game_id = 0
 number_of_games_played = 0
 last_figure_appearance = -1
 
 # If there aren't arguements just set the panel's name to 1
 if len(sys.argv) > 1:
     pygame.display.set_caption("ARL A.I Tetris " + str(sys.argv[1]))
-    game_id = sys.argv[1]
+    game_id = int(sys.argv[1])
 else:
-    pygame.display.set_caption("ARL A.I Tetris 1")
+    pygame.display.set_caption("ARL A.I Tetris 0")
 
 done = False
 clock = pygame.time.Clock()
@@ -283,6 +264,51 @@ counter = 0
 pressing_down = False
 last_move = ""
 auto_restart = False
+
+game_speed_modifier = .25
+queue_size = 4
+Is_Master = False
+Should_Load_Model = False
+Activate_Hidden_Rule = False
+Activate_Hidden_Piece = False
+Activate_Hidden_Delay = 60
+Speed_Increase = False
+   
+def Read_Config():
+    config = open("Config.txt", "r")
+    lines = config.readlines()
+    if len(lines) > 10:
+       global game_speed_modifier
+       global Is_Master
+       global queue_size
+       global Should_Load_Model
+       global Activate_Hidden_Rule
+       global Activate_Hidden_Piece
+       global Activate_Hidden_Delay
+       global Speed_Increase
+       game_speed_modifier = int(re.search(r'\d+', lines[1]).group()) * .01
+       queue_size = int(re.search(r'\d+', lines[2]).group())
+       if(lines[4].strip().split(',')[game_id] == 'True'):
+            Is_Master = True
+       else:
+            Is_Master = False
+       if(lines[6].strip().split(',')[game_id] == 'True'):
+            Activate_Hidden_Rule = True
+       else:
+            Activate_Hidden_Rule = False
+       if(lines[8].strip().split(',')[game_id] == 'True'):
+            Activate_Hidden_Piece = True
+       else:
+            Activate_Hidden_Piece = False
+       if(lines[10].strip().split(',')[game_id] == 'True'):
+            Speed_Increase = True
+       else:
+            Speed_Increase = False
+       Activate_Hidden_delay = int(re.search(r'\d+', lines[11]).group())
+
+
+Read_Config()
+print(Activate_Hidden_Delay)
 
 # Main game infinite loop
 while not done:
