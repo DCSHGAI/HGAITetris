@@ -4,9 +4,7 @@
 
 import pygame
 import random
-import platform
 import sys
-import re
 import numpy as np
 import copy
 import time
@@ -14,37 +12,25 @@ import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Input
 
-checkPointPath = "tamer.hdf5"
+#from pywinauto import Application
 
-game_speed_modifier = .25
-queue_size = 4
-Is_Master = False
-Should_Load_Model = False
-Activate_Hidden_Rule = False
-Activate_Hidden_Piece = False
-Activate_Hidden_Delay = 60
-Speed_Increase = False
-
-
-# This is an optional import that allows you to switch panels with the number keys (Windows Only)
-try:
-    from pywinauto import Application
-except ImportError:
-    print("Could not import pywinauto")
+checkPointPath = "C:\\Users\\sgordon\\Documents\\Projects\\HGAI\\Tetris\\HGAITetris-master 05-10-2022\\HGAITetris-master\\Tetris\\model\\tamer.hdf5"
 
 # Use the number keys 0-9 to toggle between windows
 def Set_Focus(number_to_focus):
-    try:
-        app = Application().connect(title_re="ARL A.I Tetris " + str(number_to_focus))
-        dlg = app.top_window()
-        dlg.set_focus()
-        print("ARL A.I Tetris " + str(number_to_focus))
-    except:
-        print("Game " + str(number_to_focus) + " does not exist.")
+    number_to_focus += 1
+    # try:
+    #     app = Application().connect(title_re="ARL A.I Tetris " + number_to_focus)
+    #     dlg = app.top_window()
+    #     dlg.set_focus()
+    # except:
+    #     print("Game " + number_to_focus + " does not exist.")
+
+training_model_file_location = ""
 
 # Read the A.I training model and parse it
 def Read_Model():
-    print("Read model here")
+    file = open(training_model_file_location, "r")
 
 # RGB Color definitions
 colors = [
@@ -63,7 +49,7 @@ class Figure:
 
     # Add new pieces here
     #
-    # There are 8 blocks currently you can add your own.
+    # There are 7 blocks currently you can add your own.
     # Blocks are defined in a grid that looks like this
     #
     # ~~~~~~~~~~~~~
@@ -99,17 +85,13 @@ class Figure:
         [[1, 2, 6, 10], [5, 6, 7, 9], [2, 6, 10, 11], [3, 5, 6, 7]],
         [[1, 4, 5, 6], [1, 4, 5, 9], [4, 5, 6, 9], [1, 5, 6, 9]],
         [[1, 2, 5, 6]],
-        [[1,4,5,9,6]]
     ]
 
     # The x and y values determine where the figure will appear on the screen
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        if(Activate_Hidden_Piece):
-             self.type = random.randint(0, len(self.figures) - 1)
-        else:
-            self.type = random.randint(0, len(self.figures) - 2)
+        self.type = random.randint(0, len(self.figures) - 1)
         self.color = random.randint(1, len(colors) - 1)
         self.rotation = 0
 
@@ -217,40 +199,39 @@ class Tamer:
         self.model.fit(ssfeats,yvalue)  
 ## END TAMER CLASS       
 
-
+## TETRIS IMPLEMENTATION        
 class Tetris:
-    level = 2
-    score = 0
-    state = "start"
-    field = []
+    level  = 2
+    score  = 0
+    state  = "start"
+    field  = []
     finalStates   = []
     actionTree    = []
     visitedStates = []
     height = 0
-    width = 0
-    x = 100
-    y = 60
-    zoom = 20
+    width  = 0
+    x      = 100
+    y      = 60
+    zoom   = 20
     figure = None
     figure_queue = []
     reward = 0
     sim    = False
-
+    
     feedback = 0
     newFig   = 0
     lastMove = -1
     gameid   = 0
     numGames = 0
-
- 
+    
     def __init__(self, height, width):
         self.height = height
-        self.width = width
-        self.field = []
-        self.score = 0
+        self.width  = width
+        self.field  = []
+        self.score  = 0
         self.reward = 0
-        self.state = "start"
-
+        self.state  = "start"
+        
         # Hand-crafted Tetris Features (for TAMER)
         self.NUM_FEATS        = 46
         self.COL_HT_START_I   = 0
@@ -262,16 +243,17 @@ class Tetris:
         self.SQUARED_FEATS_START_I   = 23
         self.SCALE_ALL_SQUARED_FEATS = False
         self.HT_SQ_SCALE             = 100.0
-
+        
         for i in range(height):
             new_line = []
             for j in range(width):
                 new_line.append(0)
             self.field.append(new_line)
-
+        
     def new_figure(self):
         while len(self.figure_queue) < 4:
             self.figure_queue.append(Figure(3,0))
+
         self.figure = self.figure_queue.pop(0)
         self.newFig = 1
 
@@ -286,8 +268,8 @@ class Tetris:
                             self.field[i + self.figure.y][j + self.figure.x] > 0:
                         intersection = True
         return intersection
-
-        ## SIMULATION FUNCTION
+    
+    ## SIMULATION FUNCTION
     def intersectsSym(self,board,figure):
         intersection = False
         for i in range(4):
@@ -299,9 +281,8 @@ class Tetris:
                             board[i + figure.y][j + figure.x] > 0:
                         intersection = True
         return intersection
-
-        ## SIMULATION FUNCTION
-
+    
+    ## SIMULATION FUNCTION
     def break_linesSym(self,board):
         lines = 0
         for i in range(1, self.height):
@@ -315,7 +296,7 @@ class Tetris:
                     for j in range(self.width):
                         board[i1][j] = board[i1 - 1][j]
         return board
-
+        
     def break_lines(self):
         lines = 0
         for i in range(1, self.height):
@@ -328,12 +309,11 @@ class Tetris:
                 for i1 in range(i, 1, -1):
                     for j in range(self.width):
                         self.field[i1][j] = self.field[i1 - 1][j]
-                Find_Area(self)
-
         # This is the base scoring system move or change this to modify how your score updates
         self.update_score(lines ** 2)
 
     # Controls for the game
+
     def go_space(self):
         game.newFig   = 0
         
@@ -342,7 +322,7 @@ class Tetris:
             self.figure.y += 1
         self.figure.y -= 1
         self.freeze()
-
+    
     ## SIMULATION FUNCTION
     def go_downSym(self,board,figure):
         fig = copy.deepcopy(figure)
@@ -357,7 +337,7 @@ class Tetris:
             brd = self.freezeSym(brd,fig)
             symStopped = True
         return brd, fig, symStopped
-
+    
     def go_down(self):
         game.newFig   = 0
         
@@ -366,7 +346,7 @@ class Tetris:
         if self.intersects():
             self.figure.y -= 1
             self.freeze()
-
+        
     def freeze(self):
         for i in range(4):
             for j in range(4):
@@ -376,7 +356,7 @@ class Tetris:
         self.new_figure()
         if self.intersects():
             self.state = "gameover"
-
+    
     ## SIMULATION FUNCTION
     def freezeSym(self,board,figure):
         for i in range(4):
@@ -394,7 +374,7 @@ class Tetris:
         if self.intersectsSym(board,fig):
             fig.x = old_x
         return fig
-
+    
     def go_side(self, dx):
         game.newFig   = 0
         
@@ -415,7 +395,7 @@ class Tetris:
             fig.rotation = old_rotation
         
         return fig
-
+    
     def rotate(self):
         game.newFig   = 0
         
@@ -425,7 +405,7 @@ class Tetris:
         self.figure.rotate()
         if self.intersects():
             self.figure.rotation = old_rotation
-
+        
     def getFeatures(self,board):
         featsArray = np.zeros(46,)-1
         featsArray[self.NUM_HOLES_I] = 0
@@ -463,7 +443,7 @@ class Tetris:
                 featsArray[self.SQUARED_FEATS_START_I + i] /= self.HT_SQ_SCALE
 
         return featsArray
-
+   
     def getWellDepth(self, col, board):
         depth = 0
         for row in range(self.height):
@@ -476,7 +456,7 @@ class Tetris:
                 elif (col == 0 or board[row][col-1] > 0) and (col == self.width-1 or board[row][col+1] > 0):
                     depth += 1
         return depth               
-
+            
     def forwardProject(self,board,figure,alist):
         nlist = copy.deepcopy(alist)
         brd   = copy.deepcopy(board)
@@ -548,21 +528,31 @@ class Tetris:
        
         self.visitedStates.append([x,y,r])
         return      
-
-    def update_reward(self, score_to_add):
-        self.reward += score_to_add
+        
+    def encourage(self, score_to_add):
+        #self.reward += score_to_add
+        self.feedback = score_to_add
    
     # Modify this to change how scoring works
     def update_score(self, score_to_add):
         self.score += score_to_add
 
-    def encourage(self, score_to_add):
-        self.feedback = score_to_add
-
     def state_evaluation(self):
         # Self.field contains the playing field if there is a non-zero number in the array
         # then that space is occupied by a shape.
-        a = 1
+
+        # This function tries to move pieces as far to the left as possible without overlapping.
+       
+        # Check down and to the left to see if its clear for an object
+        field_index_to_check_y = (self.figure.y + 1) % 20
+        field_index_to_check_x = (self.figure.x - 1) % 10
+
+        if(self.field[field_index_to_check_y][field_index_to_check_x] == 0):
+            self.go_side(-1)
+        else:
+            self.go_side(2)
+
+        #print("Do something based on the state here in state_evaluation")
 
     # Draw rectangles off to the right to represent the next 3 shapes in the queue.
     def draw_queue(self, figure, position_in_queue, screen):
@@ -600,7 +590,7 @@ pygame.init()
 # Define some colors for the UI
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-GRAY = (128, 128, 128)
+GRAY  = (128, 128, 128)
 
 # Define the screen size and settings
 size = (500, 500)
@@ -610,11 +600,11 @@ number_of_games_played = 0
 last_figure_appearance = -1
 
 # If there aren't arguements just set the panel's name to 1
-if len(sys.argv) > 1:
-    pygame.display.set_caption("ARL A.I Tetris " + str(sys.argv[1]))
-    game_id = int(sys.argv[1])
+if len(sys.argv) != 0:
+    pygame.display.set_caption("ARL A.I Tetris " + str(0))#sys.argv[1]))
+    game_id = 0#sys.argv[1]
 else:
-    pygame.display.set_caption("ARL A.I Tetris 0")
+    pygame.display.set_caption("ARL A.I Tetris 1")
 
 done = False
 clock = pygame.time.Clock()
@@ -637,6 +627,9 @@ trainAI      = True
 rewardLearn  = False
 gameCounter  = 0
 
+#lastWrite = 0
+#version = 6
+
 prevx = 0
 prevy = 0
     
@@ -652,51 +645,6 @@ state_state_feats           = None
 action                      = 0
 runQuick                    = False
 Q_PLAN                      = True
-   
-def Read_Config():
-    config = open("Config.txt", "r")
-    lines = config.readlines()
-    if len(lines) > 10:
-       global game_speed_modifier
-       global Is_Master
-       global queue_size
-       global Should_Load_Model
-       global Activate_Hidden_Rule
-       global Activate_Hidden_Piece
-       global Activate_Hidden_Delay
-       global Speed_Increase
-       game_speed_modifier = int(re.search(r'\d+', lines[1]).group()) * .01
-       queue_size = int(re.search(r'\d+', lines[2]).group())
-       if(lines[4].strip().split(',')[game_id] == 'True'):
-            Is_Master = True
-       else:
-            Is_Master = False
-       if(lines[6].strip().split(',')[game_id] == 'True'):
-            Activate_Hidden_Rule = True
-       else:
-            Activate_Hidden_Rule = False
-       if(lines[8].strip().split(',')[game_id] == 'True'):
-            Activate_Hidden_Piece = True
-       else:
-            Activate_Hidden_Piece = False
-       if(lines[10].strip().split(',')[game_id] == 'True'):
-            Speed_Increase = True
-       else:
-            Speed_Increase = False
-       Activate_Hidden_delay = int(re.search(r'\d+', lines[11]).group())
-
-def Find_Area(game):
-    if(Activate_Hidden_Rule):
-        Area = 0
-        for row in game.field:
-            for position in row:
-                if position > 1:
-                    Area += 1
-        if(Area > 40):
-            game.score += 100
-
-#Read_Config()
-
 # Main game infinite loop
 while not done:
     #game.feedback = 0
@@ -839,24 +787,24 @@ while not done:
             game.feedback = 0
         
     
-            if actLoc < len(coa):
-                action = coa[actLoc]
-                actLoc += 1
-                if action==1:
-                    game.go_side(1)
-                elif action==2:
-                    game.go_side(-1)
-                elif action==3:
-                    game.rotate()
-                else:
-                    game.go_down()
+        if actLoc < len(coa):
+            action = coa[actLoc]
+            actLoc += 1
+            if action==1:
+                game.go_side(1)
+            elif action==2:
+                game.go_side(-1)
+            elif action==3:
+                game.rotate()
             else:
                 game.go_down()
-            if runQuick == False:
-                time.sleep(0.25)
+        else:
+            game.go_down()
+        if runQuick == False:
+            time.sleep(0.25)
         
-        prevx = game.figure.x
-        prevy = game.figure.y 
+    prevx = game.figure.x
+    prevy = game.figure.y 
      
     if playAI == False:    
         if counter % (fps // game.level // 2) == 0 or pressing_down:
@@ -989,6 +937,5 @@ while not done:
 
     pygame.display.flip()
     clock.tick(fps)
-
 
 pygame.quit()
