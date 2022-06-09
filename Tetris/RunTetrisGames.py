@@ -10,7 +10,6 @@ games = int(re.search(r'\d+', line).group())
 # Change this to control how many times the game is run
 NumberOfTetrisGames = games
 
-# If Python is not an e
 for Count in range(NumberOfTetrisGames):
     if  platform.system() == "Windows":
         subprocess.Popen(".\Tetris.py " + str(Count) , shell=True)
