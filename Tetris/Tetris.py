@@ -2,12 +2,14 @@
 # Modified by Bryce Bartlett
 # Original code from https://levelup.gitconnected.com/writing-tetris-in-python-2a16bddb5318
 
+from os import name
+from typing import Counter
 import pygame
 import random
 import platform
 import sys
 import re
-import numpy as np
+import numpy
 import copy
 import time
 import tensorflow as tf
@@ -15,7 +17,6 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Input
 
 checkPointPath = "tamer.hdf5"
-
 game_speed_modifier = .25
 queue_size = 4
 Is_Master = False
@@ -24,6 +25,8 @@ Activate_Hidden_Rule = False
 Activate_Hidden_Piece = False
 Activate_Hidden_Delay = 60
 Speed_Increase = False
+hidden_piece_timer_elapsed = False
+
 
 
 # This is an optional import that allows you to switch panels with the number keys (Windows Only)
@@ -41,10 +44,6 @@ def Set_Focus(number_to_focus):
         print("ARL A.I Tetris " + str(number_to_focus))
     except:
         print("Game " + str(number_to_focus) + " does not exist.")
-
-# Read the A.I training model and parse it
-def Read_Model():
-    print("Read model here")
 
 # RGB Color definitions
 colors = [
@@ -106,7 +105,7 @@ class Figure:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        if(Activate_Hidden_Piece):
+        if(Activate_Hidden_Piece and hidden_piece_timer_elapsed):
              self.type = random.randint(0, len(self.figures) - 1)
         else:
             self.type = random.randint(0, len(self.figures) - 2)
@@ -129,36 +128,25 @@ class Tamer:
         self.record  = []
         self.arecord = []
         self.frecord = []
+        self.load_record = []
+        self.load_frecord = []
+        
     def compileModel(self, optimizer = None, learning_rate = 0.001, metrics=[]):
         # construct generic model if one is not specified
         #initializer = tf.keras.initializers.Zeros()
         if self.model == None:
             input_shape = 46
-            #state_input = layers.Input(shape = (input_shape,))
-            #pred_reward = layers.Dense(1, kernel_initializer='zeros', bias_initializer='zeros')(state_input)
+            input1      = Input(shape = (input_shape,))
+            x1          = Dense(1,kernel_initializer='zeros',bias_initializer='zeros')(input1)
+            inputs      = [input1]
+
+            self.model  = Model(inputs, outputs=[x1])#,y2,y3])
             
-            input1   = Input(shape = (input_shape,))
-            x1       = Dense(1,kernel_initializer='zeros',bias_initializer='zeros')(input1)
-
-            #xx       = Dense(25,kernel_initializer=initializers.he_normal(),activation='relu')(x1)
-            #y1       = Dense(4,kernel_initializer=initializers.he_normal(),activation='linear')(xx)
-
-            inputs = [input1]#,input2]
-
-            #opt    = tf.keras.optimizers.Adam()
-            self.model     = Model(inputs, outputs=[x1])#,y2,y3])
-            #self.model.compile(loss=masked_loss_function2,optimizer=opt)
-            
-            #self.model = Model(inputs = state_input, outputs = pred_reward)
-            #self.model.summary()
-        
         # compile the model
         if optimizer == None:
-            #self.model.compile(optimizer = tf.optimizers.Adam(learning_rate=0.1), loss = 'mse')
             self.model.compile(optimizer = tf.keras.optimizers.SGD(lr=0.000005 / 47.0), loss='mse')
         else:
             self.model.compile(optimizer = optimizer, loss='mse')
-        
         self.compiled = True
     
     def load_weights(self, filepath):
@@ -170,51 +158,88 @@ class Tamer:
             self.model.save_weights(filepath)
             
     def forward(self, state_state_feats):
-        action = np.random.randint(0,len(state_state_feats))
-        ssfeats = np.zeros([len(state_state_feats),46])
+        action  = numpy.random.randint(0,len(state_state_feats))
+        ssfeats = numpy.zeros([len(state_state_feats),46])
         for s in range(len(state_state_feats)):
             for f in range(46):
                 ssfeats[s,f] = state_state_feats[s][f]
-        pred_rewards = np.zeros(len(state_state_feats))        
-        rid = np.random.randint(0,10)
+        pred_rewards = numpy.zeros(len(state_state_feats))        
+        
+        rid = numpy.random.randint(0,10)
+        
         if rid >= 8 and self.runRandom:
-            action = np.random.randint(0,len(state_state_feats))
+            action = numpy.random.randint(0,len(state_state_feats))
         else:
             if self.compiled == True:
-                pred_rewards = self.model.predict(ssfeats)
-                # # do a simple forward pass over each state-state diff
-                # pred_rewards = np.zeros((len(state_state_feats),))
-                # for idx, ss_feat in enumerate(state_state_feats):
-                #     pred_rewards[idx] = self.model.predict(np.reshape(ss_feat,(1,len(ss_feat))))
-                
-                # choose max
-                action = np.argmax(pred_rewards)
+                pred_rewards = self.model.predict(ssfeats,verbose=0)
+                action       = numpy.argmax(pred_rewards)
             else:
-                action = np.random.randint(0,len(state_state_feats))
+                action = numpy.random.randint(0,len(state_state_feats))
         
         return action, pred_rewards
     
     def backward(self, prev_state_state_feats, prev_action, human_reward):
-        
         # do a gradient update step
         if human_reward != 0 and prev_state_state_feats is not None and prev_action is not None and self.compiled == True:
-            x = np.reshape(prev_state_state_feats[prev_action],(1,len(prev_state_state_feats[prev_action]))).astype('float32')
-            y = np.reshape(np.array(human_reward,dtype='float32'),(1))
-            #self.model.train_on_batch(x,y)
-            self.model.fit(x,y)
-            #self.nb_feedback_episode += 1
-            #self.nb_feedback_total += 1
-            #print('model update')
+            x = numpy.reshape(prev_state_state_feats[prev_action],(1,len(prev_state_state_feats[prev_action]))).astype('float32')
+            y = numpy.reshape(numpy.array(human_reward,dtype='float32'),(1))
+            self.model.fit(x,y,verbose=0)
+    
+    def batch_backward(self):
+        if len(self.record) > 0:
+            ssfeats = numpy.zeros([len(self.record),46])
+            yvalue  = numpy.zeros([len(self.frecord)])
+            for s in range(len(self.record)):
+                tmp       = self.record[s]
+                feat      = tmp[self.arecord[s]]
+                yvalue[s] = self.frecord[s]
+                for f in range(46):
+                    ssfeats[s,f] = feat[f]
+            self.model.fit(ssfeats,yvalue,verbose=0) 
+            
     def all_backward(self):
-        ssfeats = np.zeros([len(self.record),46])
-        yvalue  = np.zeros([len(self.frecord)])
+        ssfeats = numpy.zeros([len(self.load_record),46])
+        yvalue  = numpy.zeros([len(self.load_frecord)])
+        for s in range(len(self.load_record)):
+            tmp       = self.load_record[s]
+            #feat      = tmp[self.load_arecord[s]]
+            yvalue[s] = self.load_frecord[s]
+            for f in range(46):
+                ssfeats[s,f] = tmp[f]
+        self.model.fit(ssfeats,yvalue,verbose=0) 
+    
+    def load_data(self,filepath):
+        #LOOP ALL TEXTFILES (.CSV) IN DIRECTORY
+        testFiles   = os.listdir(filepath)
+        self.load_record  = []
+        self.load_frecord = []
+        for t in range(len(testFiles)):
+            with open(filepath+testFiles[t], mode='r') as csv_file:
+                csv_reader = csv.reader(csv_file)
+                ndata      = list(csv_reader)
+                for s in range(len(ndata)):
+                    row = ndata[s]
+                    self.load_record.append(copy.deepcopy(row[0:(len(row)-1)]))
+                    self.load_frecord.append(copy.deepcopy(row[-1]))
+        self.all_backward()
+
+    def save_data(self,filename):
+        ssfeats = numpy.zeros([len(self.record),46])
+        yvalue  = numpy.zeros([len(self.frecord)])
         for s in range(len(self.record)):
             tmp       = self.record[s]
             feat      = tmp[self.arecord[s]]
             yvalue[s] = self.frecord[s]
             for f in range(46):
                 ssfeats[s,f] = feat[f]
-        self.model.fit(ssfeats,yvalue)  
+        textfile = open(filename,"w")
+        for s in range(len(self.record)):
+            for f in range(46):
+                textfile.write(str(ssfeats[s,f]) + ",")
+            textfile.write(str(yvalue[s]) + "\n");
+        textfile.close()
+        
+## END TAMER CLASS       
 ## END TAMER CLASS       
 
 class Tetris:
@@ -234,13 +259,15 @@ class Tetris:
     figure_queue = []
     reward = 0
     sim    = False
-
+    should_flash_reward_text = False
+    reward_text_flash_time = 90
+    reward_text_flash_counter = 0
     feedback = 0
     newFig   = 0
     lastMove = -1
     gameid   = 0
     numGames = 0
-
+    numPieces = 0
 
     def __init__(self, height, width):
         self.height = height
@@ -249,6 +276,7 @@ class Tetris:
         self.score = 0
         self.reward = 0
         self.state = "start"
+        self.numPieces = 0
 
        # Hand-crafted Tetris Features (for TAMER)
         self.NUM_FEATS        = 46
@@ -274,7 +302,7 @@ class Tetris:
             self.figure_queue.append(Figure(3,0))
         self.figure = self.figure_queue.pop(0)
         self.newFig = 1
-
+        self.numPieces += 1
 
     def intersects(self):
         intersection = False
@@ -328,6 +356,7 @@ class Tetris:
                 for i1 in range(i, 1, -1):
                     for j in range(self.width):
                         self.field[i1][j] = self.field[i1 - 1][j]
+            if(Activate_Hidden_Rule):
                 Find_Area(self)
 
         # This is the base scoring system move or change this to modify how your score updates
@@ -428,10 +457,10 @@ class Tetris:
             self.figure.rotation = old_rotation
 
     def getFeatures(self,board):
-        featsArray = np.zeros(46,)-1
+        featsArray = numpy.zeros(46,)-1
         featsArray[self.NUM_HOLES_I] = 0
         featsArray[self.SUM_WELL_I]  = 0
-        board = np.array(board)
+        board = numpy.array(board)
         
         for row in range(self.height+1):
             for col in range(self.width):
@@ -459,7 +488,7 @@ class Tetris:
 
         # get squared features and scale them so they're not too big
         for i in range(self.SQUARED_FEATS_START_I):
-            featsArray[self.SQUARED_FEATS_START_I + i] = np.square(featsArray[i])
+            featsArray[self.SQUARED_FEATS_START_I + i] = numpy.square(featsArray[i])
             if(i <= self.MAX_COL_HT_I or self.SCALE_ALL_SQUARED_FEATS):
                 featsArray[self.SQUARED_FEATS_START_I + i] /= self.HT_SQ_SCALE
 
@@ -564,11 +593,6 @@ class Tetris:
     def update_score(self, score_to_add):
         self.score += score_to_add
 
-    def state_evaluation(self):
-        # Self.field contains the playing field if there is a non-zero number in the array
-        # then that space is occupied by a shape.
-        a = 1
-
     # Draw rectangles off to the right to represent the next 3 shapes in the queue.
     def draw_queue(self, figure, position_in_queue, screen):
         color = colors[figure.color]
@@ -606,6 +630,7 @@ pygame.init()
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GRAY = (128, 128, 128)
+RED = (255, 0, 0)
 
 # Define the screen size and settings
 size = (500, 500)
@@ -629,29 +654,22 @@ counter = 0
 pressing_down = False
 last_move = ""
 auto_restart = False
-
 tamer = Tamer()
 tamer.load_weights(checkPointPath)
 game.gameid = game_id
-
 gameSym = Tetris(20,10)
-
 counter       = 0
 pressing_down = False
 last_move     = ""
-
 auto_restart = True
 playAI       = True
 trainAI      = True
 rewardLearn  = False
 gameCounter  = 0
-
 #lastWrite = 0
 #version = 6
-
 prevx = 0
-prevy = 0
-    
+prevy = 0 
 actLoc                      = 0
 prev_feedback               = 0
 prev_prev_feedback          = 0
@@ -663,40 +681,38 @@ prev_prev_state_state_feats = None
 state_state_feats           = None
 action                      = 0
 runQuick                    = False
-Q_PLAN                      = True
-
+Q_PLAN                      = False
+game_stats 					= []
    
 def Read_Config():
-    config = open("Config.txt", "r")
-    lines = config.readlines()
-    if len(lines) > 10:
-       global game_speed_modifier
-       global Is_Master
-       global queue_size
-       global Should_Load_Model
-       global Activate_Hidden_Rule
-       global Activate_Hidden_Piece
-       global Activate_Hidden_Delay
-       global Speed_Increase
-       game_speed_modifier = int(re.search(r'\d+', lines[1]).group()) * .01
-       queue_size = int(re.search(r'\d+', lines[2]).group())
-       if(lines[4].strip().split(',')[game_id] == 'True'):
-            Is_Master = True
-       else:
-            Is_Master = False
-       if(lines[6].strip().split(',')[game_id] == 'True'):
-            Activate_Hidden_Rule = True
-       else:
-            Activate_Hidden_Rule = False
-       if(lines[8].strip().split(',')[game_id] == 'True'):
-            Activate_Hidden_Piece = True
-       else:
-            Activate_Hidden_Piece = False
-       if(lines[10].strip().split(',')[game_id] == 'True'):
-            Speed_Increase = True
-       else:
-            Speed_Increase = False
-       Activate_Hidden_delay = int(re.search(r'\d+', lines[11]).group())
+    try:
+        config = open("Config.txt", "r")
+        lines = config.readlines()
+        if len(lines) > 10:
+            global game_speed_modifier
+            global queue_size
+            global Should_Load_Model
+            global Activate_Hidden_Rule
+            global Activate_Hidden_Piece
+            global Activate_Hidden_Delay
+            global Speed_Increase
+            game_speed_modifier = int(re.search(r'\d+', lines[1]).group()) * .01
+            queue_size = int(re.search(r'\d+', lines[2]).group())
+            if(lines[4].strip().split(',')[game_id] == 'True'):
+                Activate_Hidden_Rule = True
+            else:
+                Activate_Hidden_Rule = False
+            if(lines[6].strip().split(',')[game_id] == 'True'):
+                Activate_Hidden_Piece = True
+            else:
+                Activate_Hidden_Piece = False
+            if(lines[8].strip().split(',')[game_id] == 'True'):
+                Speed_Increase = True
+            else:
+                Speed_Increase = False
+            Activate_Hidden_Delay = int(re.search(r'\d+', lines[15]).group())
+    except:
+        print("Error Reading Config.txt")
 
 def Find_Area(game):
     if(Activate_Hidden_Rule):
@@ -705,8 +721,9 @@ def Find_Area(game):
             for position in row:
                 if position > 1:
                     Area += 1
-        if(Area > 40):
+        if(Area > 40 and Area < 50):
             game.score += 100
+            game.should_flash_reward_text = True
 
 Read_Config()
 
@@ -723,22 +740,11 @@ while not done:
     if playAI:
         if game.newFig == 1:
             # LEARN FROM LAST EPISODE FIRST!!!
-            if trainAI:
-                rc = copy.deepcopy(game.score)
-                fb = copy.deepcopy(prev_feedback)
-                reward = game.score - prev_reward
-                print("SCORING: " + str(game.score) + " " + str(prev_reward) + " " + str(game.feedback) + " " + str(prev_feedback) + " " + str(prev_prev_feedback))
-                if game.feedback != 0:
-                    tamer.backward(prev_state_state_feats,prev_action,game.feedback)
-                    tamer.record.append(prev_state_state_feats)
-                    tamer.arecord.append(prev_action)
-                    tamer.frecord.append(game.feedback)
-                if reward > 0 and rewardLearn == True:
-                    tamer.backward(state_state_feats,action,1)
-                    #tamer.record.append(state_state_feats)
-                    #tamer.arecord.append(action)
-                    #tamer.frecord.append(1)
-                    #tamer.all_backward() 
+            if trainAI and game.feedback != 0:
+	            tamer.backward(prev_state_state_feats,prev_action,game.feedback)
+	            tamer.record.append(prev_state_state_feats)
+	            tamer.arecord.append(prev_action)
+	            tamer.frecord.append(game.feedback)
                 
             # TAMER LOOP
             # STEP 1: DEEP COPY OF GAME
@@ -787,8 +793,8 @@ while not done:
             if Q_PLAN:
                 #QUEUE PROJECT
                 # FOR EACH ACTION --> RUN ANOTHER PASS OF FORWARD PROJECT 
-                ids = np.argsort(actionSet,axis=0)
-                ids = np.flip(ids)
+                ids = numpy.argsort(actionSet,axis=0)
+                ids = numpy.flip(ids)
                 total = 8
                 if total > len(finalStates):
                     total = len(finalStates)
@@ -829,9 +835,9 @@ while not done:
                     for stateY_feat in stateY_feats:
                         stateZ_feats.append(stateY_feat - stateX_feat)
                     qaction,qactionSet = tamer.forward(stateZ_feats)
-                    actionSet[idF] += np.max(qactionSet)
+                    actionSet[idF] += numpy.max(qactionSet)
                 
-                action = np.argmax(actionSet)
+                action = numpy.argmax(actionSet)
                 
             # STEP 4: DETERMINE COA
             coa = []
@@ -869,8 +875,8 @@ while not done:
 
     if playAI == False:    
         if counter % (fps // game.level // 2) == 0 or pressing_down:
-            if game.state == "start":
-                game.go_down()
+           if game.state == "start":
+               game.go_down()
 
     # Listens for keypresses and calls their respective functions
     for event in pygame.event.get():
@@ -894,22 +900,24 @@ while not done:
             if event.key == pygame.K_ESCAPE:
                 game.newFig   = 0
                 game.lastMove = 0
-                
                 game.__init__(20, 10)
                 number_of_games_played += 1
                 game.numGames = game.numGames + 1
                 last_move = "restart"
-                
-            if event.key == pygame.KSCAN_KP_ENTER:
+            if event.key == pygame.K_j:
                 game.encourage(1)
-            if event.key == pygame.K_KP_ENTER:
-                game.encourage(1)
-            if event.key == pygame.K_w:
-                game.encourage(1)
-            if event.key == pygame.K_e:
+                game.reward += 1
+            if event.key == pygame.K_k:
                 game.encourage(-1)    
+                game.reward -= 1
+            if event.key == pygame.K_a:
+                tamer.load_data("data\\")
             if event.key == pygame.K_s:
-                tamer.save_weights(checkPointPath)
+                tamer.save_data("data\\dataRun" + str(game.gameid) + ".csv")
+            if event.key == pygame.K_w:
+                tamer.save_weights("model\\tamer" + str(game.gameid) + ".hdf5")
+            if event.key == pygame.K_b:
+                tamer.batch_backward()
             if event.key == pygame.K_q:
                 if runQuick == True:
                     runQuick = False
@@ -927,6 +935,13 @@ while not done:
                     rewardLearn = False
                 else:
                     rewardLearn = True
+            if event.key == pygame.K_g:
+                textfile = open("gameStats"+str(game.gameid)+".csv","w")
+                for s in range(len(game_stats)):
+                    tmp = game_stats[s]
+                    textfile.write(str(tmp[0])+","+str(tmp[1])+","+str(tmp[2]) + "\n")
+                textfile.write(str(game.numGames)+","+str(game.numPieces)+","+str(game.score)+"\n")
+                textfile.close()
             # Used number keys to switch panels if they exist
             if event.key == pygame.K_0 and platform.system() == "Windows":
                 Set_Focus(0)
@@ -977,8 +992,19 @@ while not done:
     text = font.render("Score: " + str(game.score), True, BLACK)
     text_game_over = font1.render("Game Over", True, (255, 125, 0))
     text_game_over1 = font1.render("Press ESC", True, (255, 215, 0))
-    reward_text = font.render("Reward: " + str(game.reward), True, BLACK)
 
+    if(game.should_flash_reward_text and game.reward_text_flash_counter < game.reward_text_flash_time):
+        if(game.reward_text_flash_counter % 2 == 0):
+            reward_text = font.render("Reward: " + str(game.reward), True, RED)
+        game.reward_text_flash_counter += 1
+    else:
+        reward_text = font.render("Reward: " + str(game.reward), True, BLACK)
+        game.should_flash_reward_text = False
+        game.reward_text_flash_counter = 0
+
+    # Activate the hidden rule after specified delay in config file
+    if(counter > Activate_Hidden_Delay):
+        hidden_piece_timer_elapsed = True
 
     if game.figure_queue[0].type is not None:
         game.draw_queue(game.figure_queue[0], 0, screen)
@@ -986,19 +1012,20 @@ while not done:
         game.draw_queue(game.figure_queue[1], 1, screen)
     if game.figure_queue[2].type is not None:
         game.draw_queue(game.figure_queue[2], 2, screen)
+    if game.state == "gameover":
+	    game_stats.append([game.numGames,game.numPieces,game.score])
+	    textfile = open("gameStats"+str(game.gameid)+".csv","w")
+	    for s in range(len(game_stats)):
+		    tmp = game_stats[s]
+		    textfile.write(str(tmp[0])+","+str(tmp[1])+","+str(tmp[2]) + "\n")
+	    textfile.close()	
+	    if auto_restart:
+		    game.__init__(20, 10)
+		    number_of_games_played += 1    
+		    game.numGames += 1
 
     screen.blit(text, [0, 0])
     screen.blit(reward_text, [0, 25])
-    if game.state == "gameover":
-        #screen.blit(text_game_over, [20, 200])
-        #screen.blit(text_game_over1, [25, 265])
-        if auto_restart:
-            game.__init__(20, 10)
-            number_of_games_played += 1    
-            game.numGames += 1
-
-    #game.state_evaluation()
     pygame.display.flip()
     clock.tick(fps)
-
 pygame.quit()
