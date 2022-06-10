@@ -18,6 +18,7 @@ from tensorflow.keras.layers import Dense, Input
 
 checkPointPath = "tamer.hdf5"
 game_speed_modifier = .25
+upper_speed_bound = .01
 queue_size = 4
 Is_Master = False
 Should_Load_Model = False
@@ -26,8 +27,6 @@ Activate_Hidden_Piece = False
 Activate_Hidden_Delay = 60
 Speed_Increase = False
 hidden_piece_timer_elapsed = False
-
-
 
 # This is an optional import that allows you to switch panels with the number keys (Windows Only)
 try:
@@ -356,8 +355,8 @@ class Tetris:
                 for i1 in range(i, 1, -1):
                     for j in range(self.width):
                         self.field[i1][j] = self.field[i1 - 1][j]
-            if(Activate_Hidden_Rule):
-                Find_Area(self)
+                if(Activate_Hidden_Rule):
+                    Find_Area(self)
 
         # This is the base scoring system move or change this to modify how your score updates
         self.update_score(lines ** 2)
@@ -683,7 +682,8 @@ action                      = 0
 runQuick                    = False
 Q_PLAN                      = False
 game_stats 					= []
-   
+
+# TODO: Cleanup config formatting to make it consistent 
 def Read_Config():
     try:
         config = open("Config.txt", "r")
@@ -696,6 +696,8 @@ def Read_Config():
             global Activate_Hidden_Piece
             global Activate_Hidden_Delay
             global Speed_Increase
+            global checkPointPath
+            global upper_speed_bound
             game_speed_modifier = int(re.search(r'\d+', lines[1]).group()) * .01
             queue_size = int(re.search(r'\d+', lines[2]).group())
             if(lines[4].strip().split(',')[game_id] == 'True'):
@@ -710,7 +712,9 @@ def Read_Config():
                 Speed_Increase = True
             else:
                 Speed_Increase = False
-            Activate_Hidden_Delay = int(re.search(r'\d+', lines[15]).group())
+            Activate_Hidden_Delay = int(re.search(r'\d+', lines[13]).group())
+            checkPointPath = str(lines[11])
+            upper_speed_bound = float(lines[15])
     except:
         print("Error Reading Config.txt")
 
@@ -868,8 +872,12 @@ while not done:
         else:
             game.go_down()
         if runQuick == False:
-            time.sleep(0.25)
-
+            time.sleep(game_speed_modifier)
+            if(Speed_Increase):
+                # Slowly increase the speed
+                game_speed_modifier *= .99
+                if(game_speed_modifier < upper_speed_bound):
+                    game_speed_modifier = upper_speed_bound
     prevx = game.figure.x
     prevy = game.figure.y 
 

@@ -1,5 +1,5 @@
 GameInstances=10
-GameSpeed=25000
+GameSpeed=.25
 QueueSize=4
 HiddenRule
 True,True,True,True,True,True,True,True,True,True
@@ -8,9 +8,9 @@ False,False,True,False,True,False,True,False,True,False
 IncreaseSpeedOverTime
 False,False,True,False,True,False,True,False,True,False
 TimeToActivateHiddenPiece=55
-LowerSpeedBound=10
-UpperSpeedBound=20
 checkpointpath
 tamer.hdf5
 HiddenRuleDelayFrames
 18000
+GameSpeedUpperBound
+.01
