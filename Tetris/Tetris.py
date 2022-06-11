@@ -2,7 +2,7 @@
 # Modified by Bryce Bartlett
 # Original code from https://levelup.gitconnected.com/writing-tetris-in-python-2a16bddb5318
 
-from os import name
+import os
 from typing import Counter
 import pygame
 import random
@@ -16,6 +16,12 @@ import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Input
 
+# This is an optional import that allows you to switch panels with the number keys (Windows Only)
+try:
+    from pywinauto import Application
+except ImportError:
+    print("Could not import pywinauto")
+
 checkPointPath = "tamer.hdf5"
 game_speed_modifier = .25
 upper_speed_bound = .01
@@ -27,12 +33,10 @@ Activate_Hidden_Piece = False
 Activate_Hidden_Delay = 60
 Speed_Increase = False
 hidden_piece_timer_elapsed = False
+game_id = 0
+pygame.init()
 
-# This is an optional import that allows you to switch panels with the number keys (Windows Only)
-try:
-    from pywinauto import Application
-except ImportError:
-    print("Could not import pywinauto")
+
 
 # Use the number keys 0-9 to toggle between windows
 def Set_Focus(number_to_focus):
@@ -116,6 +120,50 @@ class Figure:
 
     def rotate(self):
         self.rotation = (self.rotation + 1) % len(self.figures[self.type])
+
+# TODO: Cleanup config formatting to make it consistent 
+def Read_Config():
+    try:
+        config = open("Config.txt", "r")
+        lines = config.readlines()
+        if len(lines) > 10:
+            global game_speed_modifier
+            global queue_size
+            global Should_Load_Model
+            global Activate_Hidden_Rule
+            global Activate_Hidden_Piece
+            global Activate_Hidden_Delay
+            global Speed_Increase
+            global checkPointPath
+            global upper_speed_bound
+            game_speed_modifier = int(re.search(r'\d+', lines[1]).group()) * .01
+            queue_size = int(re.search(r'\d+', lines[2]).group())
+            if(lines[4].strip().split(',')[game_id] == 'True'):
+                Activate_Hidden_Rule = True
+            else:
+                Activate_Hidden_Rule = False
+            if(lines[6].strip().split(',')[game_id] == 'True'):
+                Activate_Hidden_Piece = True
+            else:
+                Activate_Hidden_Piece = False
+            if(lines[8].strip().split(',')[game_id] == 'True'):
+                Speed_Increase = True
+            else:
+                Speed_Increase = False
+            Activate_Hidden_Delay = int(re.search(r'\d+', lines[13]).group())
+            checkPointPath = str(lines[11]).strip()
+            upper_speed_bound = float(lines[15])
+    except Exception as Reason:
+        print("Error Reading Config.txt: " + str(Reason))
+
+# If there aren't arguements just set the panel's name to 1
+if len(sys.argv) > 1:
+    pygame.display.set_caption("ARL A.I Tetris " + str(sys.argv[1]))
+    game_id = int(sys.argv[1])
+else:
+    pygame.display.set_caption("ARL A.I Tetris 0")
+
+Read_Config()
 
 ## CURRENT BASIC TAMER IMPLEMENTATION
 class Tamer:
@@ -623,7 +671,6 @@ class Tetris:
              pygame.draw.rect(screen, color, (375, (position_in_queue * 100) + 50, 50, 50))
 
 # Initialize the game engine (Do not delete)
-pygame.init()
 
 # Define some colors for the UI
 BLACK = (0, 0, 0)
@@ -634,16 +681,8 @@ RED = (255, 0, 0)
 # Define the screen size and settings
 size = (500, 500)
 screen = pygame.display.set_mode(size)
-game_id = 0
 number_of_games_played = 0
 last_figure_appearance = -1
-
-# If there aren't arguements just set the panel's name to 1
-if len(sys.argv) > 1:
-    pygame.display.set_caption("ARL A.I Tetris " + str(sys.argv[1]))
-    game_id = int(sys.argv[1])
-else:
-    pygame.display.set_caption("ARL A.I Tetris 0")
 
 done = False
 clock = pygame.time.Clock()
@@ -683,40 +722,6 @@ runQuick                    = False
 Q_PLAN                      = False
 game_stats 					= []
 
-# TODO: Cleanup config formatting to make it consistent 
-def Read_Config():
-    try:
-        config = open("Config.txt", "r")
-        lines = config.readlines()
-        if len(lines) > 10:
-            global game_speed_modifier
-            global queue_size
-            global Should_Load_Model
-            global Activate_Hidden_Rule
-            global Activate_Hidden_Piece
-            global Activate_Hidden_Delay
-            global Speed_Increase
-            global checkPointPath
-            global upper_speed_bound
-            game_speed_modifier = int(re.search(r'\d+', lines[1]).group()) * .01
-            queue_size = int(re.search(r'\d+', lines[2]).group())
-            if(lines[4].strip().split(',')[game_id] == 'True'):
-                Activate_Hidden_Rule = True
-            else:
-                Activate_Hidden_Rule = False
-            if(lines[6].strip().split(',')[game_id] == 'True'):
-                Activate_Hidden_Piece = True
-            else:
-                Activate_Hidden_Piece = False
-            if(lines[8].strip().split(',')[game_id] == 'True'):
-                Speed_Increase = True
-            else:
-                Speed_Increase = False
-            Activate_Hidden_Delay = int(re.search(r'\d+', lines[13]).group())
-            checkPointPath = str(lines[11])
-            upper_speed_bound = float(lines[15])
-    except:
-        print("Error Reading Config.txt")
 
 def Find_Area(game):
     if(Activate_Hidden_Rule):
@@ -729,7 +734,6 @@ def Find_Area(game):
             game.score += 100
             game.should_flash_reward_text = True
 
-Read_Config()
 
 # Main game infinite loop
 while not done:
@@ -939,10 +943,10 @@ while not done:
                     tamer.runRandom = True
                     print('Random ON')
             if event.key == pygame.K_t:
-                if rewardLearn == True:
-                    rewardLearn = False
+                if Q_PLAN == True:
+                    Q_PLAN = False
                 else:
-                    rewardLearn = True
+                    Q_PLAN = True
             if event.key == pygame.K_g:
                 textfile = open("gameStats"+str(game.gameid)+".csv","w")
                 for s in range(len(game_stats)):

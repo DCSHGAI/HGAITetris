@@ -10,7 +10,7 @@ False,False,True,False,True,False,True,False,True,False
 TimeToActivateHiddenPiece=55
 checkpointpath
 tamer.hdf5
-HiddenRuleDelayFrames
-18000
+HiddenPieceDelay
+30
 GameSpeedUpperBound
 .01
