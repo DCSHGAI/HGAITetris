@@ -8,3 +8,23 @@ Instructions to Run
 5. The PyGame package is required to run the code a guide to install packages can be found here https://packaging.python.org/en/latest/tutorials/installing-packages/
 4. Run the RunTetrisGames.py to spool up multiple games either in editor or by double clicking on the RunTetrisGames.py script
 5. (OR) Run Tetris.py to run a single instance of the game either in editor or by double clicking on it
+
+
+
+Key Controls
+Up Arrow = Rotate Piece
+Down Arrow = Move Piece Down
+Left Arrow = Move Left
+Right Arrow = Move Right
+Escape = Restart Game
+K = Encourage A.I
+J = Discourage A.I
+A = Load A.I data
+S = Save A.I data
+W = Save Weights
+B = Tamer Batch Backwards
+Q = Toggle Run Speed Fast/Slow
+R = Toggle Randomization
+T = Toggle QPlan
+G = Write Game Stats to file
+0-9 = Switch to numbered window
