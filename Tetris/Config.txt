@@ -1,6 +1,9 @@
-GameInstances=10
-GameSpeed=.25
-QueueSize=4
+GameInstances
+10
+GameSpeed
+25
+QueueSize
+4
 HiddenRule
 True,True,True,True,True,True,True,True,True,True
 HiddenPiece

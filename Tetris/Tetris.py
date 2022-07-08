@@ -50,7 +50,6 @@ def Set_Focus(number_to_focus):
     except:
         print("Game " + str(number_to_focus) + " does not exist.")
 
-
 # RGB Color definitions
 colors = [
     (0, 0, 0),
@@ -61,7 +60,6 @@ colors = [
     (180, 34, 22),
     (180, 34, 122),
 ]
-
 
 class Figure:
     x = 0
@@ -125,7 +123,6 @@ class Figure:
     def rotate(self):
         self.rotation = (self.rotation + 1) % len(self.figures[self.type])
 
-
 # TODO: Cleanup config formatting to make it consistent
 def Read_Config():
     try:
@@ -141,26 +138,25 @@ def Read_Config():
             global Speed_Increase
             global checkPointPath
             global upper_speed_bound
-            game_speed_modifier = int(re.search(r"\d+", lines[1]).group()) * 0.01
-            queue_size = int(re.search(r"\d+", lines[2]).group())
-            if lines[4].strip().split(",")[game_id] == "True":
+            game_speed_modifier = int(re.search(r"\d+", lines[3]).group()) * 0.01
+            queue_size = int(re.search(r"\d+", lines[5]).group())
+            if lines[7].strip().split(",")[game_id] == "True":
                 Activate_Hidden_Rule = True
             else:
                 Activate_Hidden_Rule = False
-            if lines[6].strip().split(",")[game_id] == "True":
+            if lines[10].strip().split(",")[game_id] == "True":
                 Activate_Hidden_Piece = True
             else:
                 Activate_Hidden_Piece = False
-            if lines[8].strip().split(",")[game_id] == "True":
+            if lines[11].strip().split(",")[game_id] == "True":
                 Speed_Increase = True
             else:
                 Speed_Increase = False
             Activate_Hidden_Delay = int(re.search(r"\d+", lines[13]).group())
-            checkPointPath = str(lines[11]).strip()
-            upper_speed_bound = float(lines[15])
+            checkPointPath = str(lines[14]).strip()
+            upper_speed_bound = float(lines[18])
     except Exception as Reason:
         print("Error Reading Config.txt: " + str(Reason))
-
 
 # If there aren't arguements just set the panel's name to 1
 if len(sys.argv) > 1:

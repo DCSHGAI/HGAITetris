@@ -4,8 +4,8 @@ import platform
 
 # Read config file
 config = open("Config.txt", "r")
-line = config.readline()
-games = int(re.search(r'\d+', line).group())
+lines = config.readlines()
+games = int(re.search(r'\d+', lines[1]).group())
 
 # Change this to control how many times the game is run
 NumberOfTetrisGames = games
