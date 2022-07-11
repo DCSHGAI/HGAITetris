@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>836e198a-a28b-4287-858c-fcae5dc9dace</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>RunTetrisGames.py</StartupFile>
+    <StartupFile>__main__.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -21,6 +21,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="__main__.py" />
     <Compile Include="RunTetrisGames.py" />
     <Compile Include="Tetris.py" />
   </ItemGroup>
