@@ -15,4 +15,4 @@ def StartGames():
         if  platform.system() == "Windows":
             subprocess.Popen(".\Tetris.cpython-39.pyc " + str(Count) , shell=True)
         else:
-            subprocess.Popen("#!/usr/bin/env python Tetris.py " + str(Count) , shell=True)
+            subprocess.Popen("#!/usr/bin/env python Tetris.cpython-39.pyc " + str(Count) , shell=True)

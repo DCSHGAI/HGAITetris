@@ -740,7 +740,7 @@ pressing_down = False
 last_move = ""
 auto_restart = False
 tamer = Tamer()
-tamer.load_weights(checkPointPath)
+#tamer.load_weights(checkPointPath)
 game.gameid = game_id
 gameSym = Tetris(20, 10)
 counter = 0
