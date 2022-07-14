@@ -17,6 +17,7 @@ import numpy
 import copy
 import time
 import tensorflow as tf
+import StateEvaluation
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Input
 
@@ -123,10 +124,10 @@ class Figure:
     def rotate(self):
         self.rotation = (self.rotation + 1) % len(self.figures[self.type])
 
-# TODO: Cleanup config formatting to make it consistent
 def Read_Config():
     try:
-        config = open("Config.txt", "r")
+        filepath = os.path.join(os.path.dirname(os.getcwd()), "Tetris\Config.txt")
+        config = open(filepath, "r")
         lines = config.readlines()
         if len(lines) > 10:
             global game_speed_modifier
@@ -144,7 +145,7 @@ def Read_Config():
                 Activate_Hidden_Rule = True
             else:
                 Activate_Hidden_Rule = False
-            if lines[10].strip().split(",")[game_id] == "True":
+            if lines[9].strip().split(",")[game_id] == "True":
                 Activate_Hidden_Piece = True
             else:
                 Activate_Hidden_Piece = False
@@ -152,7 +153,7 @@ def Read_Config():
                 Speed_Increase = True
             else:
                 Speed_Increase = False
-            Activate_Hidden_Delay = int(re.search(r"\d+", lines[13]).group())
+            Activate_Hidden_Delay = int(lines[16])
             checkPointPath = str(lines[14]).strip()
             upper_speed_bound = float(lines[18])
     except Exception as Reason:
@@ -297,11 +298,6 @@ class Tamer:
                 textfile.write(str(ssfeats[s, f]) + ",")
             textfile.write(str(yvalue[s]) + "\n")
         textfile.close()
-
-
-## END TAMER CLASS
-## END TAMER CLASS
-
 
 class Tetris:
     level = 2
@@ -723,9 +719,6 @@ class Tetris:
                 screen, color, (375, (position_in_queue * 100) + 50, 50, 50)
             )
 
-
-# Initialize the game engine (Do not delete)
-
 # Define some colors for the UI
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -754,7 +747,7 @@ counter = 0
 pressing_down = False
 last_move = ""
 auto_restart = True
-playAI = True
+playAI = False
 trainAI = True
 rewardLearn = False
 gameCounter = 0
@@ -776,7 +769,6 @@ runQuick = False
 Q_PLAN = False
 game_stats = []
 
-
 def Find_Area(game):
     if Activate_Hidden_Rule:
         Area = 0
@@ -787,7 +779,6 @@ def Find_Area(game):
         if Area > 40 and Area < 50:
             game.score += 100
             game.should_flash_reward_text = True
-
 
 # Main game infinite loop
 while not done:
@@ -1128,6 +1119,7 @@ while not done:
     screen.blit(text, [0, 0])
     screen.blit(reward_text, [0, 25])
     screen.blit(text_last_button_used, [0, 50])
+    StateEvaluation.GameStateEvaluation(game)
     pygame.display.flip()
     clock.tick(fps)
 pygame.quit()
