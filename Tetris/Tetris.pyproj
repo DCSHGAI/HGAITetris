@@ -21,6 +21,8 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="StateEvaluation.py" />
+    <Compile Include="__init__.py" />
     <Compile Include="__main__.py" />
     <Compile Include="RunTetrisGames.py" />
     <Compile Include="Tetris.py" />
