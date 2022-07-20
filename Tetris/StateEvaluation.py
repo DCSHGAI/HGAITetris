@@ -161,7 +161,7 @@ class Tamer2:
 
 checkPointPath = "tamer.hdf5"
 tamer          = Tamer2()
-#tamer.load_weights(checkPointPath)
+tamer.load_weights(checkPointPath)
 
 gameSym = ts.TetrisSym(20,10)
 
@@ -265,5 +265,4 @@ def GameStateEvaluation(game,events):
             else:
                 game.go_down()
         else:
-            game.go_down()        
-            
+            game.go_down()  

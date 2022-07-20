@@ -7,7 +7,6 @@
 
 import os
 from typing import Counter
-import pygame
 import random
 import platform
 import sys
@@ -15,11 +14,17 @@ import re
 import time
 import StateEvaluation
 
+try:
+    import pygame
+except:
+    print("Could not import Pygame! Have you run pip install pygame?")
+
 # This is an optional import that allows you to switch panels with the number keys (Windows Only)
 try:
     from pywinauto import Application
 except ImportError:
-    print("Could not import pywinauto")
+    print("Could not import pywinauto! Have you run pip install pywinauto?")
+    print("Pywinauto is not required and only for Windows but will allow you to switch Tetris panels if installed.")
 
 game_speed_modifier   = 0.25
 upper_speed_bound     = 0.01
@@ -32,7 +37,8 @@ Activate_Hidden_Piece = False
 Activate_Hidden_Delay = 60
 Speed_Increase        = False
 hidden_piece_timer_elapsed = False
-
+Tetris_Board_X = 100
+Tetris_Board_Y = 60
 pygame.init()
 
 # Use the number keys 0-9 to toggle between windows
@@ -133,6 +139,8 @@ def Read_Config():
             global Speed_Increase
             global checkPointPath
             global upper_speed_bound
+            global Tetris_Board_X
+            global Tetris_Board_Y
             game_speed_modifier = int(re.search(r"\d+", lines[3]).group()) * 0.01
             queue_size = int(re.search(r"\d+", lines[5]).group())
             if lines[7].strip().split(",")[game_id] == "True":
@@ -150,6 +158,8 @@ def Read_Config():
             Activate_Hidden_Delay = int(lines[16])
             checkPointPath = str(lines[14]).strip()
             upper_speed_bound = float(lines[18])
+            Tetris_Board_X = int(lines[20])
+            Tetris_Board_Y = int(lines[21])
     except Exception as Reason:
         print("Error Reading Config.txt: " + str(Reason))
 
@@ -172,15 +182,13 @@ class Tetris:
     visitedStates = []
     height = 0
     width  = 0
-    x      = 100
-    y      = 60
+    x      = Tetris_Board_X
+    y      = Tetris_Board_Y
     zoom   = 20
     figure = None
-    
     figure_queue = []
     reward       = 0
     sim          = False
-    
     should_flash_reward_text  = False
     reward_text_flash_time    = 90
     reward_text_flash_counter = 0
@@ -190,7 +198,7 @@ class Tetris:
     gameid    = 0
     numGames  = 0
     numPieces = 0
-    playAI = False
+    playAI = True
     trainAI = False
 
     def __init__(self, height, width):

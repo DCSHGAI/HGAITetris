@@ -17,3 +17,6 @@ HiddenPieceDelay
 30
 GameSpeedUpperBound
 .01
+Python Board X and Y
+100
+60
