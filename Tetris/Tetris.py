@@ -213,8 +213,7 @@ class Tetris:
     gameid    = 0
     numGames  = 0
     numPieces = 0
-    playAI = True
-    trainAI = False
+    playAI    = False
 
     def __init__(self, height, width):
         self.height = height
@@ -233,7 +232,12 @@ class Tetris:
 
     def new_figure(self):
         while len(self.figure_queue) < 4:
-            self.figure_queue.append(Figure(3, 0))
+            adder = self.width/2-5
+            adder = int(adder)
+            if adder < 0:
+                adder = 0
+            
+            self.figure_queue.append(Figure(3+adder, 0))
         self.figure = self.figure_queue.pop(0)
         self.newFig = 1
         self.numPieces += 1
@@ -395,8 +399,8 @@ class Tetris:
 # Define some colors for the UI
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-GRAY = (128, 128, 128)
-RED = (255, 0, 0)
+GRAY  = (128, 128, 128)
+RED   = (255, 0, 0)
 
 # Define the screen size and settings
 size = (500, 500)
@@ -404,15 +408,23 @@ screen = pygame.display.set_mode(size)
 number_of_games_played = 0
 last_figure_appearance = -1
 
+<<<<<<< HEAD
 done = False
 clock = pygame.time.Clock()
 fps = 30
 game = Tetris(Row_Count, Column_Count)
+=======
+done    = False
+clock   = pygame.time.Clock()
+fps     = 30
+WIDTH   = 10
+game    = Tetris(20, WIDTH)
+>>>>>>> 17ca0c0d5f93bf2d907be1de19d0d1894d80fa09
 counter = 0
-pressing_down = False
-last_move = ""
-auto_restart = False
 
+pressing_down = False
+last_move     = ""
+auto_restart  = False
 game.gameid   = game_id
 counter       = 0
 pressing_down = False
@@ -502,7 +514,11 @@ while not done:
             if event.key == pygame.K_ESCAPE:
                 game.newFig   = 0
                 game.lastMove = 0
+<<<<<<< HEAD
                 game.__init__(Row_Count, Column_Count)
+=======
+                game.__init__(20, WIDTH)
+>>>>>>> 17ca0c0d5f93bf2d907be1de19d0d1894d80fa09
                 number_of_games_played += 1
                 game.numGames = game.numGames + 1
                 last_move = "restart"
@@ -643,7 +659,11 @@ while not done:
             textfile.write(str(tmp[0]) + "," + str(tmp[1]) + "," + str(tmp[2]) + "\n")
         textfile.close()
         if auto_restart:
+<<<<<<< HEAD
             game.__init__(Row_Count, Column_Count)
+=======
+            game.__init__(20, WIDTH + number_of_games_played)
+>>>>>>> 17ca0c0d5f93bf2d907be1de19d0d1894d80fa09
             number_of_games_played += 1
             game.numGames += 1
 

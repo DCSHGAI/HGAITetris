@@ -48,14 +48,14 @@ class TetrisSym:
         self.numPieces = 0
 
         # Hand-crafted Tetris Features (for TAMER)
-        self.NUM_FEATS = 46
+        self.NUM_FEATS = 2 * (2*self.width+3)#46
         self.COL_HT_START_I = 0
-        self.MAX_COL_HT_I = 10
-        self.COL_DIFF_START_I = 11
-        self.NUM_HOLES_I = 20
-        self.MAX_WELL_I = 21
-        self.SUM_WELL_I = 22
-        self.SQUARED_FEATS_START_I = 23
+        self.MAX_COL_HT_I = self.width#10
+        self.COL_DIFF_START_I = self.width+1#11
+        self.NUM_HOLES_I = 2*self.width#self.height#20
+        self.MAX_WELL_I = 2*self.width+1#21
+        self.SUM_WELL_I = 2*self.width+2#22
+        self.SQUARED_FEATS_START_I = 2*self.width+3#23
         self.SCALE_ALL_SQUARED_FEATS = False
         self.HT_SQ_SCALE = 100.0
 
@@ -138,7 +138,7 @@ class TetrisSym:
         return fig
 
     def getFeatures(self, board):
-        featsArray = (numpy.zeros(46,)- 1)
+        featsArray = (numpy.zeros(self.NUM_FEATS,)- 1)
         featsArray[self.NUM_HOLES_I] = 0
         featsArray[self.SUM_WELL_I] = 0
         board = numpy.array(board)
@@ -206,7 +206,7 @@ class TetrisSym:
         if self.visitedStates[x,y,r] == 1:
             return
         
-        if len(self.finalStates) > 50:
+        if len(self.finalStates) > 4*self.width*self.height+1:
             return
         for a in [0,1,2,3]:#range(0, 4):
             symStopped = False

@@ -9,10 +9,15 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Input
 
 class Tamer2:
-    def __init__(self):
+    def __init__(self,width=10):
         self.compiled  = False
         self.model     = None
         self.runRandom = False
+<<<<<<< HEAD
+=======
+        self.width     = width
+        self.NUM_FEATS = 2 * (2*width + 3)
+>>>>>>> 17ca0c0d5f93bf2d907be1de19d0d1894d80fa09
         self.compileModel()
         self.record       = []
         self.arecord      = []
@@ -32,7 +37,7 @@ class Tamer2:
         # construct generic model if one is not specified
         # initializer = tf.keras.initializers.Zeros()
         if self.model == None:
-            input_shape = 46
+            input_shape = self.NUM_FEATS
             input1      = Input(shape=(input_shape,))
             x1          = Dense(1, kernel_initializer="zeros", bias_initializer="zeros")(input1)
             inputs      = [input1]
@@ -61,9 +66,9 @@ class Tamer2:
     #FORWARD PROJECT FROM SET OF STATE FEATURE VECTORS TO PREDICT REWARDS & BEST ACTION
     def forward(self, state_state_feats):
         action = numpy.random.randint(0, len(state_state_feats))
-        ssfeats = numpy.zeros([len(state_state_feats), 46])
+        ssfeats = numpy.zeros([len(state_state_feats), self.NUM_FEATS])
         for s in range(len(state_state_feats)):
-            for f in range(46):
+            for f in range(self.NUM_FEATS):
                 ssfeats[s, f] = state_state_feats[s][f]
         pred_rewards = numpy.zeros(len(state_state_feats))
 
@@ -102,24 +107,24 @@ class Tamer2:
     #BATCH OVER ALL PREVIOUS INSTANCES
     def batch_backward(self):
         if len(self.record) > 0:
-            ssfeats = numpy.zeros([len(self.record), 46])
+            ssfeats = numpy.zeros([len(self.record), self.NUM_FEATS])
             yvalue = numpy.zeros([len(self.frecord)])
             for s in range(len(self.record)):
                 tmp       = self.record[s]
                 feat      = tmp[self.arecord[s]]
                 yvalue[s] = self.frecord[s]
-                for f in range(46):
+                for f in range(self.NUM_FEATS):
                     ssfeats[s, f] = feat[f]
             self.model.fit(ssfeats, yvalue, verbose=0)
 
     #BACKPROJECT OVER ALL LOADED INSTANCES
     def all_backward(self):
-        ssfeats = numpy.zeros([len(self.load_record), 46])
+        ssfeats = numpy.zeros([len(self.load_record), self.NUM_FEATS])
         yvalue  = numpy.zeros([len(self.load_frecord)])
         for s in range(len(self.load_record)):
             tmp       = self.load_record[s]
             yvalue[s] = self.load_frecord[s]
-            for f in range(46):
+            for f in range(self.NUM_FEATS):
                 ssfeats[s, f] = tmp[f]
         self.model.fit(ssfeats, yvalue, verbose=0)
     
@@ -141,30 +146,44 @@ class Tamer2:
 
     #SAVE DATA FROM ANOTHER RUN
     def save_data(self, filename):
-        ssfeats = numpy.zeros([len(self.record), 46])
+        ssfeats = numpy.zeros([len(self.record), self.NUM_FEATS])
         yvalue  = numpy.zeros([len(self.frecord)])
         for s in range(len(self.record)):
             tmp       = self.record[s]
             feat      = tmp[self.arecord[s]]
             yvalue[s] = self.frecord[s]
-            for f in range(46):
+            for f in range(self.NUM_FEATS):
                 ssfeats[s, f] = feat[f]
         textfile = open(filename, "w")
         for s in range(len(self.record)):
-            for f in range(46):
+            for f in range(self.NUM_FEATS):
                 textfile.write(str(ssfeats[s, f]) + ",")
             textfile.write(str(yvalue[s]) + "\n")
         textfile.close()
 
 checkPointPath = "tamer.hdf5"
-tamer          = Tamer2()
-tamer.load_weights(checkPointPath)
+global tamer#          = None#Tamer2(10)
+global gameSym
 
-gameSym = ts.TetrisSym(20,10)
+tamer = None
+
+#tamer.load_weights(checkPointPath)
+#gameSym = ts.TetrisSym(20,10)
 
 def GameStateEvaluation(game,events):
+    global tamer
+    global gameSym
     # GameState gives you access to the entire Tetris class and includes the field and all controls
+    if tamer==None:
+        tamer   = Tamer2(game.width)
+        if game.width == 10:
+            tamer.load_weights(checkPointPath)
+        gameSym = ts.TetrisSym(game.height,game.width)
     
+    if gameSym.width != game.width:
+        tamer   = Tamer2(game.width)
+        gameSym = ts.TetrisSym(game.height,game.width)
+        
     #LOOP OVER INPUT EVENTS - INSERT YOUR OWN CONTROLS HERE
     for event in events:
         if event.type == pygame.KEYDOWN:
@@ -200,8 +219,8 @@ def GameStateEvaluation(game,events):
             gameSym.finalStates    = []
             gameSym.actionTree     = []
             #BOOKKEEPING VARIABLES
-            gameSym.visitedStates  = numpy.zeros([10,20,4])
-            gameSym.finalLocations = numpy.zeros([10,20,4])
+            gameSym.visitedStates  = numpy.zeros([game.width,game.height,4])
+            gameSym.finalLocations = numpy.zeros([game.width,game.height,4])
             #GET THE STATE OF THE GAME & FIGURE
             field  = copy.deepcopy(game.field)
             figure = copy.deepcopy(game.figure)
@@ -209,10 +228,10 @@ def GameStateEvaluation(game,events):
             gameSym.forwardProject(field, figure, [])
 
             #COMPUTE STARTING STATE
-            board = [[0 for x in range(10)] for y in range(20)]
-            board += [[1 for x in range(10)]]
-            for i in range(10):
-                for j in range(20):
+            board = [[0 for x in range(game.width)] for y in range(game.height)]
+            board += [[1 for x in range(game.width)]]
+            for i in range(game.width):
+                for j in range(game.height):
                     board[j][i] = game.field[j][i]
 
             state0_feat = gameSym.getFeatures(board)
@@ -220,10 +239,10 @@ def GameStateEvaluation(game,events):
             #COMPUTE DIFFERENCES BETWEEN FINAL STATES AND STARTING STATE
             state1_feats = []
             for piecePlacement in gameSym.finalStates:
-                board = [[0 for x in range(10)] for y in range(20)]
-                board += [[1 for x in range(10)]]
-                for i in range(10):
-                    for j in range(20):
+                board = [[0 for x in range(game.width)] for y in range(20)]
+                board += [[1 for x in range(game.width)]]
+                for i in range(game.width):
+                    for j in range(game.height):
                         board[j][i] = piecePlacement[j][i]
                 state1_feats.append(gameSym.getFeatures(board))
 
