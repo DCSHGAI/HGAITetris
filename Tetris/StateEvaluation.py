@@ -13,15 +13,12 @@ class Tamer2:
         self.compiled  = False
         self.model     = None
         self.runRandom = False
-        
         self.compileModel()
-        
         self.record       = []
         self.arecord      = []
         self.frecord      = []
         self.load_record  = []
         self.load_frecord = []
-        
         self.actLoc                 = 0
         self.coa                    = []
         self.state_state_feats      = None

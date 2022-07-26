@@ -37,8 +37,14 @@ Activate_Hidden_Piece = False
 Activate_Hidden_Delay = 60
 Speed_Increase        = False
 hidden_piece_timer_elapsed = False
+Activate_Immovable_Piece = False;
 Tetris_Board_X = 100
 Tetris_Board_Y = 60
+X_Offset = 100
+Row_Delta = 0
+Column_Delta = 0
+Row_Count = 20
+Column_Count = 10
 pygame.init()
 
 # Use the number keys 0-9 to toggle between windows
@@ -104,7 +110,7 @@ class Figure:
         [[1, 2, 6, 10], [5, 6, 7, 9], [2, 6, 10, 11], [3, 5, 6, 7]],
         [[1, 4, 5, 6], [1, 4, 5, 9], [4, 5, 6, 9], [1, 5, 6, 9]],
         [[1, 2, 5, 6]],
-        [[1, 4, 5, 9, 6]],
+        [[1, 4, 5, 9, 6]]
     ]
 
     # The x and y values determine where the figure will appear on the screen
@@ -141,6 +147,10 @@ def Read_Config():
             global upper_speed_bound
             global Tetris_Board_X
             global Tetris_Board_Y
+            global X_Offset
+            global Activate_Immovable_Piece
+            global Row_Delta
+            global Column_Delta
             game_speed_modifier = int(re.search(r"\d+", lines[3]).group()) * 0.01
             queue_size = int(re.search(r"\d+", lines[5]).group())
             if lines[7].strip().split(",")[game_id] == "True":
@@ -160,6 +170,11 @@ def Read_Config():
             upper_speed_bound = float(lines[18])
             Tetris_Board_X = int(lines[20])
             Tetris_Board_Y = int(lines[21])
+            X_Offset = Tetris_Board_X - 100
+            if lines[23].strip().split(",")[game_id] == "True":
+                Activate_Immovable_Piece = True
+            Row_Delta = int(lines[25])
+            Column_Delta = int(lines[27])
     except Exception as Reason:
         print("Error Reading Config.txt: " + str(Reason))
 
@@ -248,7 +263,9 @@ class Tetris:
                 lines += 1
                 for i1 in range(i, 1, -1):
                     for j in range(self.width):
-                        self.field[i1][j] = self.field[i1 - 1][j]
+                        # Everything is being shifted down by one but if it is immovable prevent it from shifting.
+                        if(self.field[i1][j] != 6):
+                            self.field[i1][j] = self.field[i1 - 1][j]
                 if Activate_Hidden_Rule:
                     Find_Area(self)
 
@@ -327,52 +344,52 @@ class Tetris:
         if figure.type == 0:
             # Column
             pygame.draw.rect(
-                screen, color, (350, (position_in_queue * 100) + 50, 100, 25)
+                screen, color, (350 + X_Offset, (position_in_queue * 100) + 50, 100, 25)
             )
         elif figure.type == 1:
             # Slide
             pygame.draw.rect(
-                screen, color, (350, (position_in_queue * 100) + 50, 50, 25)
+                screen, color, (350 + X_Offset, (position_in_queue * 100) + 50, 50, 25)
             )
             pygame.draw.rect(
-                screen, color, (375, (position_in_queue * 100) + 75, 50, 25)
+                screen, color, (375 + X_Offset, (position_in_queue * 100) + 75, 50, 25)
             )
         elif figure.type == 2:
             # Other Slide
             pygame.draw.rect(
-                screen, color, (350, (position_in_queue * 100) + 75, 50, 25)
+                screen, color, (350 + X_Offset, (position_in_queue * 100) + 75, 50, 25)
             )
             pygame.draw.rect(
-                screen, color, (375, (position_in_queue * 100) + 50, 50, 25)
+                screen, color, (375 + X_Offset, (position_in_queue * 100) + 50, 50, 25)
             )
         elif figure.type == 3:
             # Bottom L
             pygame.draw.rect(
-                screen, color, (350, (position_in_queue * 110) + 50, 25, 50)
+                screen, color, (350 + X_Offset, (position_in_queue * 110) + 50, 25, 50)
             )
             pygame.draw.rect(
-                screen, color, (350, (position_in_queue * 110) + 25, 50, 25)
+                screen, color, (350 + X_Offset, (position_in_queue * 110) + 25, 50, 25)
             )
         elif figure.type == 4:
             # Top L
             pygame.draw.rect(
-                screen, color, (375, (position_in_queue * 100) + 50, 25, 75)
+                screen, color, (375 + X_Offset, (position_in_queue * 100) + 50, 25, 75)
             )
             pygame.draw.rect(
-                screen, color, (350, (position_in_queue * 100) + 50, 25, 25)
+                screen, color, (350 + X_Offset, (position_in_queue * 100) + 50, 25, 25)
             )
         elif figure.type == 5:
             # Half Plus
             pygame.draw.rect(
-                screen, color, (350, (position_in_queue * 100) + 75, 75, 25)
+                screen, color, (350 + X_Offset, (position_in_queue * 100) + 75, 75, 25)
             )
             pygame.draw.rect(
-                screen, color, (375, (position_in_queue * 100) + 50, 25, 50)
+                screen, color, (375 + X_Offset, (position_in_queue * 100) + 50, 25, 50)
             )
         elif figure.type == 6:
             # Square
             pygame.draw.rect(
-                screen, color, (375, (position_in_queue * 100) + 50, 50, 50)
+                screen, color, (375 + X_Offset, (position_in_queue * 100) + 50, 50, 50)
             )
 
 # Define some colors for the UI
@@ -390,7 +407,7 @@ last_figure_appearance = -1
 done = False
 clock = pygame.time.Clock()
 fps = 30
-game = Tetris(20, 10)
+game = Tetris(Row_Count, Column_Count)
 counter = 0
 pressing_down = False
 last_move = ""
@@ -485,7 +502,7 @@ while not done:
             if event.key == pygame.K_ESCAPE:
                 game.newFig   = 0
                 game.lastMove = 0
-                game.__init__(20, 10)
+                game.__init__(Row_Count, Column_Count)
                 number_of_games_played += 1
                 game.numGames = game.numGames + 1
                 last_move = "restart"
@@ -626,7 +643,7 @@ while not done:
             textfile.write(str(tmp[0]) + "," + str(tmp[1]) + "," + str(tmp[2]) + "\n")
         textfile.close()
         if auto_restart:
-            game.__init__(20, 10)
+            game.__init__(Row_Count, Column_Count)
             number_of_games_played += 1
             game.numGames += 1
 

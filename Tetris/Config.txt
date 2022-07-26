@@ -20,3 +20,9 @@ GameSpeedUpperBound
 Python Board X and Y
 100
 60
+Immovable Pieces
+True,True,True,True,True,True,True,True,True,True,True,True
+Tetris Board Row Delta
+0
+Tetris Board Column Delta
+0
