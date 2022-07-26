@@ -22,6 +22,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="StateEvaluation.py" />
+    <Compile Include="TetrisSym.py" />
     <Compile Include="__main__.py" />
     <Compile Include="RunTetrisGames.py" />
     <Compile Include="Tetris.py" />
