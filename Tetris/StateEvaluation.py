@@ -13,11 +13,7 @@ class Tamer2:
         self.compiled  = False
         self.model     = None
         self.runRandom = False
-<<<<<<< HEAD
-=======
-        self.width     = width
-        self.NUM_FEATS = 2 * (2*width + 3)
->>>>>>> 17ca0c0d5f93bf2d907be1de19d0d1894d80fa09
+
         self.compileModel()
         self.record       = []
         self.arecord      = []

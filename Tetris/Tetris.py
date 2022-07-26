@@ -408,18 +408,11 @@ screen = pygame.display.set_mode(size)
 number_of_games_played = 0
 last_figure_appearance = -1
 
-<<<<<<< HEAD
 done = False
 clock = pygame.time.Clock()
 fps = 30
 game = Tetris(Row_Count, Column_Count)
-=======
-done    = False
-clock   = pygame.time.Clock()
-fps     = 30
-WIDTH   = 10
-game    = Tetris(20, WIDTH)
->>>>>>> 17ca0c0d5f93bf2d907be1de19d0d1894d80fa09
+
 counter = 0
 
 pressing_down = False
@@ -514,11 +507,8 @@ while not done:
             if event.key == pygame.K_ESCAPE:
                 game.newFig   = 0
                 game.lastMove = 0
-<<<<<<< HEAD
                 game.__init__(Row_Count, Column_Count)
-=======
-                game.__init__(20, WIDTH)
->>>>>>> 17ca0c0d5f93bf2d907be1de19d0d1894d80fa09
+
                 number_of_games_played += 1
                 game.numGames = game.numGames + 1
                 last_move = "restart"
@@ -659,11 +649,8 @@ while not done:
             textfile.write(str(tmp[0]) + "," + str(tmp[1]) + "," + str(tmp[2]) + "\n")
         textfile.close()
         if auto_restart:
-<<<<<<< HEAD
             game.__init__(Row_Count, Column_Count)
-=======
-            game.__init__(20, WIDTH + number_of_games_played)
->>>>>>> 17ca0c0d5f93bf2d907be1de19d0d1894d80fa09
+
             number_of_games_played += 1
             game.numGames += 1
 
