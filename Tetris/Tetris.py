@@ -268,7 +268,7 @@ class Tetris:
                 for i1 in range(i, 1, -1):
                     for j in range(self.width):
                         # Everything is being shifted down by one but if it is immovable prevent it from shifting.
-                        if(self.field[i1][j] != 6):
+                        if(self.field[i1][j] != 6 and self.field[i1-1][j] != 6):
                             self.field[i1][j] = self.field[i1 - 1][j]
                 if Activate_Hidden_Rule:
                     Find_Area(self)
