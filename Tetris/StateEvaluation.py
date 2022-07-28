@@ -174,11 +174,11 @@ def GameStateEvaluation(game,events):
     #    if game.width == 10:
     #        tamer.load_weights(checkPointPath)
     #    gameSym = ts.TetrisSym(game.height,game.width)
-    
+    # 
     #if gameSym.width != game.width:
     #    tamer   = Tamer2(game.width)
-    #    gameSym = ts.TetrisSym(game.height,game.width)
-    #    
+    #   gameSym = ts.TetrisSym(game.height,game.width)
+        
     #LOOP OVER INPUT EVENTS - INSERT YOUR OWN CONTROLS HERE
     for event in events:
         if event.type == pygame.KEYDOWN:
