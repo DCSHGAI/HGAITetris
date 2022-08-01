@@ -40,11 +40,11 @@ hidden_piece_timer_elapsed = False
 Activate_Immovable_Piece = False;
 Tetris_Board_X = 100
 Tetris_Board_Y = 60
-X_Offset = 100
-Row_Delta = 0
-Column_Delta = 0
-Row_Count = 20
-Column_Count = 10
+X_Offset       = 100
+Row_Delta      = 0
+Column_Delta   = 0
+Row_Count      = 20
+Column_Count   = 10
 pygame.init()
 
 # Use the number keys 0-9 to toggle between windows
@@ -257,18 +257,76 @@ class Tetris:
         return intersection
 
     def break_lines(self):
+        # lines = 0
+        # for i in range(1, self.height):
+        #     zeros = 0
+        #     for j in range(self.width):
+        #         if self.field[i][j] == 0:
+        #             zeros += 1
+        #     if zeros == 0:
+        #         lines += 1
+        #         for i1 in range(i, 1, -1):
+        #             for j in range(self.width):
+        #                 # Everything is being shifted down by one but if it is immovable prevent it from shifting.
+        #                 if(self.field[i1][j] != 6 and self.field[i1-1][j] != 6):
+        #                     self.field[i1][j] = self.field[i1 - 1][j]
+        #         if Activate_Hidden_Rule:
+        #             Find_Area(self)
+        
+        #SG BOMB TEST
+        ## BOMB DYNAMICS
+        ## 1. BOMBS DELETE WHAT THEY TOUCH BEFORE YOU GET POINTS
+        ## 2. BOMBS ALSO DISAPPEAR
+        ## 3. BOMBS ARE HARD CODED TO A SHAPE
+        if enableBombs:
+            for i in range(self.height-1, 0, -1):
+                for j in range(self.width):
+                    if self.field[i][j] == 100:
+                        self.field[i][j] = 0
+                        if i < self.height-1 :
+                            self.field[i+1][j] = 0
+            
+            for i in range(self.height):
+                for j in range(self.width):
+                    if self.field[i][j] == 100:
+                        self.field[i][j] = 0
+        ## SG BRICK TEST
+        ## BRICK DYNAMICS
+        ##   1. BRICKS STAY WHERE THEY ARE AND DON'T DELETE
+        ##   2. BRICKS CAN BE USED TO COMPLETE ROWS BUT (see 1)
+        ##   3. ONLY WAY TO GET RID OF A BRICK IS
+        ##      3.1 WITH A BOMB (see above BOMB test)
+        ##      3.2 FORMING AN ENTIRE ROW OF BRICKS (this is a necessity)
+        ##   4. BRICKS ARE HARD CODED TO A COLOR
         lines = 0
         for i in range(1, self.height):
             zeros = 0
+            brcks = 0
             for j in range(self.width):
                 if self.field[i][j] == 0:
                     zeros += 1
+                if self.field[i][j] == 6:
+                    brcks += 1
             if zeros == 0:
+                bricks = []
+                if brcks==self.width:
+                    for j in range(self.width):
+                        bricks.append(1)
+                else:
+                    for j in range(self.width):
+                        bricks.append(self.field[i][j])
+                    
                 lines += 1
                 for i1 in range(i, 1, -1):
                     for j in range(self.width):
-                        # Everything is being shifted down by one but if it is immovable prevent it from shifting.
-                        if(self.field[i1][j] != 6 and self.field[i1-1][j] != 6):
+                        if enableBombs:
+                            # Everything is being shifted down by one but if it is immovable prevent it from shifting.
+                            if(bricks[j] != 6 and self.field[i1 - 1][j] != 6):
+                                self.field[i1][j] = self.field[i1 - 1][j]
+                            elif(bricks[j] != 6 and self.field[i1 - 1][j] == 6):
+                                self.field[i1][j] = 0
+                                bricks[j] = 6
+                        else:
                             self.field[i1][j] = self.field[i1 - 1][j]
                 if Activate_Hidden_Rule:
                     Find_Area(self)
@@ -297,10 +355,18 @@ class Tetris:
             self.freeze()
 
     def freeze(self):
-        for i in range(4):
-            for j in range(4):
-                if i * 4 + j in self.figure.image():
-                    self.field[i + self.figure.y][j + self.figure.x] = self.figure.color
+        #SG BOMB TEST
+    
+        if self.figure.type == 6 and self.figure.color>0 and enableBombs:
+            for i in range(4):
+                for j in range(4):
+                    if i * 4 + j in self.figure.image():
+                        self.field[i + self.figure.y][j + self.figure.x] = 100
+        else:
+            for i in range(4):
+                for j in range(4):
+                    if i * 4 + j in self.figure.image():
+                        self.field[i + self.figure.y][j + self.figure.x] = self.figure.color
         self.break_lines()
         self.new_figure()
         if self.intersects():
@@ -345,55 +411,56 @@ class Tetris:
     # Draw rectangles off to the right to represent the next 3 shapes in the queue.
     def draw_queue(self, figure, position_in_queue, screen):
         color = colors[figure.color]
+        xo    = X_Offset + (self.width - 10) * 25
         if figure.type == 0:
             # Column
             pygame.draw.rect(
-                screen, color, (350 + X_Offset, (position_in_queue * 100) + 50, 100, 25)
+                screen, color, (350 + xo, (position_in_queue * 100) + 50, 100, 25)
             )
         elif figure.type == 1:
             # Slide
             pygame.draw.rect(
-                screen, color, (350 + X_Offset, (position_in_queue * 100) + 50, 50, 25)
+                screen, color, (350 + xo, (position_in_queue * 100) + 50, 50, 25)
             )
             pygame.draw.rect(
-                screen, color, (375 + X_Offset, (position_in_queue * 100) + 75, 50, 25)
+                screen, color, (375 + xo, (position_in_queue * 100) + 75, 50, 25)
             )
         elif figure.type == 2:
             # Other Slide
             pygame.draw.rect(
-                screen, color, (350 + X_Offset, (position_in_queue * 100) + 75, 50, 25)
+                screen, color, (350 + xo, (position_in_queue * 100) + 75, 50, 25)
             )
             pygame.draw.rect(
-                screen, color, (375 + X_Offset, (position_in_queue * 100) + 50, 50, 25)
+                screen, color, (375 + xo, (position_in_queue * 100) + 50, 50, 25)
             )
         elif figure.type == 3:
             # Bottom L
             pygame.draw.rect(
-                screen, color, (350 + X_Offset, (position_in_queue * 110) + 50, 25, 50)
+                screen, color, (350 + xo, (position_in_queue * 110) + 50, 25, 50)
             )
             pygame.draw.rect(
-                screen, color, (350 + X_Offset, (position_in_queue * 110) + 25, 50, 25)
+                screen, color, (350 + xo, (position_in_queue * 110) + 25, 50, 25)
             )
         elif figure.type == 4:
             # Top L
             pygame.draw.rect(
-                screen, color, (375 + X_Offset, (position_in_queue * 100) + 50, 25, 75)
+                screen, color, (375 + xo, (position_in_queue * 100) + 50, 25, 75)
             )
             pygame.draw.rect(
-                screen, color, (350 + X_Offset, (position_in_queue * 100) + 50, 25, 25)
+                screen, color, (350 + xo, (position_in_queue * 100) + 50, 25, 25)
             )
         elif figure.type == 5:
             # Half Plus
             pygame.draw.rect(
-                screen, color, (350 + X_Offset, (position_in_queue * 100) + 75, 75, 25)
+                screen, color, (350 + xo, (position_in_queue * 100) + 75, 75, 25)
             )
             pygame.draw.rect(
-                screen, color, (375 + X_Offset, (position_in_queue * 100) + 50, 25, 50)
+                screen, color, (375 + xo, (position_in_queue * 100) + 50, 25, 50)
             )
         elif figure.type == 6:
             # Square
             pygame.draw.rect(
-                screen, color, (375 + X_Offset, (position_in_queue * 100) + 50, 50, 50)
+                screen, color, (375 + xo, (position_in_queue * 100) + 50, 50, 50)
             )
 
 # Define some colors for the UI
@@ -403,18 +470,22 @@ GRAY  = (128, 128, 128)
 RED   = (255, 0, 0)
 
 # Define the screen size and settings
-size = (500, 500)
+size   = (500, 500)
 screen = pygame.display.set_mode(size)
+
 number_of_games_played = 0
 last_figure_appearance = -1
 
-done = False
+done  = False
 clock = pygame.time.Clock()
-fps = 30
-game = Tetris(Row_Count, Column_Count)
+fps   = 30
+game  = Tetris(Row_Count, Column_Count)
 
-counter = 0
+StartTime = time.time()
+counter   = 0
 
+enableBombs   = False
+resizeGame    = False
 pressing_down = False
 last_move     = ""
 auto_restart  = False
@@ -486,17 +557,17 @@ while not done:
     
             if event.key == pygame.K_DOWN:
                 pressing_down = True
-                last_move  = "down"
-                game.playAI = False
+                last_move     = "down"
+                game.playAI   = False
                 
             if event.key == pygame.K_LEFT:
                 game.go_side(-1)
-                last_move = "left"
+                last_move   = "left"
                 game.playAI = False
                 
             if event.key == pygame.K_RIGHT:
                 game.go_side(1)
-                last_move = "right"
+                last_move   = "right"
                 game.playAI = False
                 
             if event.key == pygame.K_SPACE:
@@ -507,11 +578,22 @@ while not done:
             if event.key == pygame.K_ESCAPE:
                 game.newFig   = 0
                 game.lastMove = 0
-                game.__init__(Row_Count, Column_Count)
+                
+                cc    = int(Column_Count)
+                nsize = [500+(cc-10)*25,500]
+                if nsize[0] != size[0] or nsize[1] != size[1]:
+                    screen = pygame.display.set_mode(nsize)
+                    size   = nsize
+                    
+                game.__init__(Row_Count, cc)
+                if resizeGame:
+                    Column_Count += 0.25
+                
+                #game.__init__(Row_Count, int(Column_Count))
 
                 number_of_games_played += 1
-                game.numGames = game.numGames + 1
-                last_move = "restart"
+                game.numGames          = game.numGames + 1
+                last_move              = "restart"
             
             if event.key == pygame.K_j:
                 game.encourage(1)
@@ -612,12 +694,26 @@ while not done:
                         ],
                     )
 
-    font  = pygame.font.SysFont("Calibri", 25, True, False)
-    font1 = pygame.font.SysFont("Calibri", 65, True, False)
-    text  = font.render("Score: " + str(game.score), True, BLACK)
+
+    ## TIME MEASUREMENT
+    current_time = time.time()
+    if current_time-StartTime > 360:
+        game_stats.append([game.numGames, game.numPieces, game.score])
+        textfile = open("gameStats" + str(game.gameid) + ".csv", "w")
+        for s in range(len(game_stats)):
+            tmp = game_stats[s]
+            textfile.write(str(tmp[0]) + "," + str(tmp[1]) + "," + str(tmp[2]) + "\n")
+        textfile.close()
+        done = True
+        
+    font                  = pygame.font.SysFont("Calibri", 18, True, False)#25
+    font1                 = pygame.font.SysFont("Calibri", 65, True, False)#65
+    text                  = font.render("Score: " + str(game.score), True, BLACK)
+    runtime_text          = font.render("RunTime: " + str(int(current_time-StartTime)),True,BLACK)
     text_game_over        = font1.render("Game Over", True, (255, 125, 0))
     text_game_over1       = font1.render("Press ESC", True, (255, 215, 0))
     text_last_button_used = font.render(last_move, True, (0, 0, 0))
+
 
     if (
         game.should_flash_reward_text
@@ -625,9 +721,11 @@ while not done:
     ):
         if game.reward_text_flash_counter % 2 == 0:
             reward_text = font.render("Reward: " + str(game.reward), True, RED)
+            text        = font.render("Score: " + str(game.score), True, RED)
         game.reward_text_flash_counter += 1
     else:
         reward_text = font.render("Reward: " + str(game.reward), True, BLACK)
+        text        = font.render("Score: " + str(game.score), True, BLACK)
         game.should_flash_reward_text = False
         game.reward_text_flash_counter = 0
 
@@ -648,16 +746,27 @@ while not done:
             tmp = game_stats[s]
             textfile.write(str(tmp[0]) + "," + str(tmp[1]) + "," + str(tmp[2]) + "\n")
         textfile.close()
+        
         if auto_restart:
-            game.__init__(Row_Count, Column_Count)
-
+            cc    = int(Column_Count)
+            nsize = [500+(cc-10)*25,500]
+            if nsize[0] != size[0] or nsize[1] != size[1]:
+                screen = pygame.display.set_mode(nsize)
+                size   = nsize
+                
+            game.__init__(Row_Count, cc)
+            if resizeGame:
+                Column_Count += 0.25
             number_of_games_played += 1
-            game.numGames += 1
+            game.numGames          += 1
 
     screen.blit(text, [0, 0])
-    screen.blit(reward_text, [0, 25])
-    screen.blit(text_last_button_used, [0, 50])
+    #screen.blit(reward_text, [0, 19]) #25
+    screen.blit(text_last_button_used, [0, 19]) #50
+    screen.blit(runtime_text,[0,38])
     
     pygame.display.flip()
     clock.tick(fps)
+    
+    
 pygame.quit()

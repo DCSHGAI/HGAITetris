@@ -13,6 +13,8 @@ class Tamer2:
         self.compiled  = False
         self.model     = None
         self.runRandom = False
+        self.width                  = width
+        self.NUM_FEATS              = 2 * (2*self.width+3)
         self.compileModel()
         self.record       = []
         self.arecord      = []
@@ -160,24 +162,27 @@ checkPointPath = "tamer.hdf5"
 global tamer#          = None#Tamer2(10)
 global gameSym
 
-tamer = None
-
+tamer   = None
+gameSym = None
 #tamer.load_weights(checkPointPath)
 #gameSym = ts.TetrisSym(20,10)
 
 def GameStateEvaluation(game,events):
     global tamer
     global gameSym
+    # if gameSym == None:
+    #     gameSym = ts.TetrisSym(game.height,game.width)
+        
     # GameState gives you access to the entire Tetris class and includes the field and all controls
-    #if tamer==None:
-    #    tamer   = Tamer2(game.width)
-    #    if game.width == 10:
-    #        tamer.load_weights(checkPointPath)
-    #    gameSym = ts.TetrisSym(game.height,game.width)
+    if tamer==None:
+        tamer   = Tamer2(game.width)
+        #if game.width == 10:
+        #    tamer.load_weights(checkPointPath)
+        gameSym = ts.TetrisSym(game.height,game.width)
     
-    #if gameSym.width != game.width:
-    #    tamer   = Tamer2(game.width)
-    #    gameSym = ts.TetrisSym(game.height,game.width)
+    if gameSym.width != game.width:
+        tamer   = Tamer2(game.width)
+        gameSym = ts.TetrisSym(game.height,game.width)
     #    
     #LOOP OVER INPUT EVENTS - INSERT YOUR OWN CONTROLS HERE
     for event in events:
@@ -196,6 +201,9 @@ def GameStateEvaluation(game,events):
                 tamer.batch_backward()
                 
     if game.playAI:
+        #if tamer == None:
+        #    tamer = Tamer2(game.width)
+            
         # IF GAME FEEDBACK --> UPDATE MODEL (I.E. LEARN)
         if game.feedback != 0:
             tamer.backward(tamer.prev_state_state_feats,tamer.prev_action,game.feedback)
