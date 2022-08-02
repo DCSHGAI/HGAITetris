@@ -9,7 +9,7 @@ True,True,True,True,True,True,True,True,True,True,True,True
 HiddenPiece
 False,False,True,False,True,False,True,False,True,False,True,True
 IncreaseSpeedOverTime
-False,False,True,False,True,False,True,False,True,False,True,True
+False,False,False,False,False,False,False,False,False,False,False,False
 TimeToActivateHiddenPiece=55
 checkpointpath
 tamer.hdf5
@@ -21,7 +21,7 @@ Python Board X and Y
 100
 60
 Immovable Pieces
-True,True,True,True,True,True,True,True,True,True,True,True
+False,True,False,True,False,True,False,True,False,True,False,True
 Tetris Board Row Delta
 0
 Tetris Board Column Delta
