@@ -28,14 +28,13 @@ class TetrisSym:
     should_flash_reward_text = False
     reward_text_flash_time = 90
     reward_text_flash_counter = 0
-    feedback = 0
-    newFig = 0
-    lastMove = -1
-    gameid = 0
-    numGames = 0
+    feedback  = 0
+    newFig    = 0
+    lastMove  = -1
+    gameid    = 0
+    numGames  = 0
     numPieces = 0
-    playAI = False
-    trainAI = False
+    playAI    = False
     
 
     def __init__(self, height, width):
@@ -44,10 +43,10 @@ class TetrisSym:
         self.field = []
         self.score = 0
         self.reward = 0
-        self.state = "start"
+        self.state     = "start"
         self.numPieces = 0
 
-        # Hand-crafted Tetris Features (for TAMER)
+        # Hand-crafted Tetris Features (for TAMER, i.e. example AI)
         self.NUM_FEATS = 2 * (2*self.width+3)#46
         self.COL_HT_START_I = 0
         self.MAX_COL_HT_I = self.width#10

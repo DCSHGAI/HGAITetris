@@ -15,7 +15,6 @@ class Tamer2:
         self.runRandom = False
         self.width                  = width
         self.NUM_FEATS              = 2 * (2*self.width+3)
-        self.compileModel()
         self.record       = []
         self.arecord      = []
         self.frecord      = []
@@ -28,6 +27,10 @@ class Tamer2:
         self.prev_action            = 0
         self.action                 = 0
         self.playAI                 = False
+        self.classState             = 'Started'
+        self.numSamples             = 0
+        self.state                  = ''
+        self.compileModel()
 
     #COMPILE BASIC MODEL
     def compileModel(self, optimizer=None, learning_rate=0.001, metrics=[]):
@@ -48,21 +51,30 @@ class Tamer2:
             )
         else:
             self.model.compile(optimizer=optimizer, loss="mse")
-        self.compiled = True
+        self.compiled   = True
+        if(self.playAI):
+            self.classState = 'Compiled'
+        else:
+            self.classState = 'Compiled'
 
     #LOAD PREVIOUS WEIGHTS FILE
     def load_weights(self, filepath):
+        filepath = os.path.normpath(filepath)
         if self.compiled == True:
             self.model.load_weights(filepath)
+            self.classState = 'Weights Loaded'
+
 
     #SAVE WEIGHTS FILE
     def save_weights(self, filepath):
+        filepath = os.path.normpath(filepath)
         if self.compiled == True:
             self.model.save_weights(filepath)
-
+            self.classState = 'Saved Weights'
+                
     #FORWARD PROJECT FROM SET OF STATE FEATURE VECTORS TO PREDICT REWARDS & BEST ACTION
     def forward(self, state_state_feats):
-        action = numpy.random.randint(0, len(state_state_feats))
+        action  = numpy.random.randint(0, len(state_state_feats))
         ssfeats = numpy.zeros([len(state_state_feats), self.NUM_FEATS])
         for s in range(len(state_state_feats)):
             for f in range(self.NUM_FEATS):
@@ -100,6 +112,8 @@ class Tamer2:
             ).astype("float32")
             y = numpy.reshape(numpy.array(human_reward, dtype="float32"), (1))
             self.model.fit(x, y, verbose=0)
+            self.numSamples += 1
+            self.classState = 'Learned on '+str(self.numSamples)
 
     #BATCH OVER ALL PREVIOUS INSTANCES
     def batch_backward(self):
@@ -132,17 +146,21 @@ class Tamer2:
         self.load_record  = []
         self.load_frecord = []
         for t in range(len(testFiles)):
-            with open(filepath + testFiles[t], mode="r") as csv_file:
+            with open(os.path.normpath(filepath + testFiles[t]), mode="r") as csv_file:
                 csv_reader = csv.reader(csv_file)
                 ndata = list(csv_reader)
                 for s in range(len(ndata)):
                     row = ndata[s]
                     self.load_record.append(copy.deepcopy(row[0 : (len(row) - 1)]))
                     self.load_frecord.append(copy.deepcopy(row[-1]))
+            self.numSamples = self.numSamples + len(ndata)
         self.all_backward()
+        self.classState = 'Learned on '+str(self.numSamples)
+        
 
     #SAVE DATA FROM ANOTHER RUN
     def save_data(self, filename):
+        filename = os.path.normpath(filename)
         ssfeats = numpy.zeros([len(self.record), self.NUM_FEATS])
         yvalue  = numpy.zeros([len(self.frecord)])
         for s in range(len(self.record)):
@@ -157,6 +175,7 @@ class Tamer2:
                 textfile.write(str(ssfeats[s, f]) + ",")
             textfile.write(str(yvalue[s]) + "\n")
         textfile.close()
+        self.classState = 'Saved ' + str(len(self.record)) + ' Samples'
 
 checkPointPath = "tamer.hdf5"
 global tamer#          = None#Tamer2(10)
@@ -170,8 +189,6 @@ gameSym = None
 def GameStateEvaluation(game,events):
     global tamer
     global gameSym
-    # if gameSym == None:
-    #     gameSym = ts.TetrisSym(game.height,game.width)
         
     # GameState gives you access to the entire Tetris class and includes the field and all controls
     if tamer==None:
@@ -285,3 +302,7 @@ def GameStateEvaluation(game,events):
                 game.go_down()
         else:
             game.go_down()  
+        tamer.state = 'AI = On; ' + tamer.classState
+    else:
+        tamer.state = 'AI = Off; ' + tamer.classState
+    

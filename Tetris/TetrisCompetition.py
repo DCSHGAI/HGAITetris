@@ -268,47 +268,6 @@ class Tetris:
         return intersection
 
     def break_lines(self):
-        # lines = 0
-        # for i in range(1, self.height):
-        #     zeros = 0
-        #     for j in range(self.width):
-        #         if self.field[i][j] == 0:
-        #             zeros += 1
-        #     if zeros == 0:
-        #         lines += 1
-        #         for i1 in range(i, 1, -1):
-        #             for j in range(self.width):
-        #                 # Everything is being shifted down by one but if it is immovable prevent it from shifting.
-        #                 if(self.field[i1][j] != 6 and self.field[i1-1][j] != 6):
-        #                     self.field[i1][j] = self.field[i1 - 1][j]
-        #         if Activate_Hidden_Rule:
-        #             Find_Area(self)
-        
-        #SG BOMB TEST
-        ## BOMB DYNAMICS
-        ## 1. BOMBS DELETE WHAT THEY TOUCH BEFORE YOU GET POINTS
-        ## 2. BOMBS ALSO DISAPPEAR
-        ## 3. BOMBS ARE HARD CODED TO A SHAPE
-        if enableBombs:
-            for i in range(self.height-1, 0, -1):
-                for j in range(self.width):
-                    if self.field[i][j] == 100:
-                        self.field[i][j] = 0
-                        if i < self.height-1 :
-                            self.field[i+1][j] = 0
-            
-            for i in range(self.height):
-                for j in range(self.width):
-                    if self.field[i][j] == 100:
-                        self.field[i][j] = 0
-        ## SG BRICK TEST
-        ## BRICK DYNAMICS
-        ##   1. BRICKS STAY WHERE THEY ARE AND DON'T DELETE
-        ##   2. BRICKS CAN BE USED TO COMPLETE ROWS BUT (see 1)
-        ##   3. ONLY WAY TO GET RID OF A BRICK IS
-        ##      3.1 WITH A BOMB (see above BOMB test)
-        ##      3.2 FORMING AN ENTIRE ROW OF BRICKS (this is a necessity)
-        ##   4. BRICKS ARE HARD CODED TO A COLOR
         lines = 0
         for i in range(1, self.height):
             zeros = 0
@@ -316,29 +275,11 @@ class Tetris:
             for j in range(self.width):
                 if self.field[i][j] == 0:
                     zeros += 1
-                if self.field[i][j] == 6:
-                    brcks += 1
             if zeros == 0:
-                bricks = []
-                if brcks==self.width:
-                    for j in range(self.width):
-                        bricks.append(1)
-                else:
-                    for j in range(self.width):
-                        bricks.append(self.field[i][j])
-                    
                 lines += 1
                 for i1 in range(i, 1, -1):
                     for j in range(self.width):
-                        if enableBombs:
-                            # Everything is being shifted down by one but if it is immovable prevent it from shifting.
-                            if(bricks[j] != 6 and self.field[i1 - 1][j] != 6):
-                                self.field[i1][j] = self.field[i1 - 1][j]
-                            elif(bricks[j] != 6 and self.field[i1 - 1][j] == 6):
-                                self.field[i1][j] = 0
-                                bricks[j] = 6
-                        else:
-                            self.field[i1][j] = self.field[i1 - 1][j]
+                        self.field[i1][j] = self.field[i1 - 1][j]
                 if Activate_Hidden_Rule:
                     Find_Area(self)
 
@@ -366,18 +307,6 @@ class Tetris:
             self.freeze()
 
     def freeze(self):
-        #SG BOMB TEST
-    
-        if self.figure.type == 6 and self.figure.color>0 and enableBombs:
-            for i in range(4):
-                for j in range(4):
-                    if i * 4 + j in self.figure.image():
-                        self.field[i + self.figure.y][j + self.figure.x] = 100
-        else:
-            for i in range(4):
-                for j in range(4):
-                    if i * 4 + j in self.figure.image():
-                        self.field[i + self.figure.y][j + self.figure.x] = self.figure.color
         self.break_lines()
         self.new_figure()
         if self.intersects():
@@ -495,14 +424,6 @@ game  = Tetris(Row_Count, Column_Count)
 StartTime = time.time()
 counter   = 0
 
-# CHANGE THIS TO ENABLE BOMBS & BRICKS
-# CURRENTLY BOMBS AND BRICKS ARE A PACKAGE DEAL
-enableBombs   = False
-
-# CHANGE THIS TO ENABLE RESIZING OF BOARD
-# CURRENTLY BOARD GROWS BY 1 COL EVERY 4 GAMES
-resizeGame    = False
-
 pressing_down = False
 last_move     = ""
 auto_restart  = False
@@ -597,20 +518,9 @@ while not done:
                 game.newFig   = 0
                 game.lastMove = 0
                 
-                cc    = int(Column_Count)
-                nsize = [500+(cc-10)*25,500]
-                if nsize[0] != size[0] or nsize[1] != size[1]:
-                    screen = pygame.display.set_mode(nsize)
-                    size   = nsize
-                    
-                game.__init__(Row_Count, cc)
-                if resizeGame:
-                    Column_Count += 0.25
-                
-                #game.__init__(Row_Count, int(Column_Count))
-
+                game.__init__(Row_Count, Column_Count)
                 number_of_games_played += 1
-                game.numGames          = game.numGames + 1
+                game.numGames          += 1    
                 last_move              = "restart"
             
             if event.key == pygame.K_j:
@@ -775,17 +685,7 @@ while not done:
         textfile.close()
         
         if auto_restart:
-            
-            #THIS IS WHERE GAME RESIZING HAPPENS
-            cc    = int(Column_Count)
-            nsize = [500+(cc-10)*25,500]
-            if nsize[0] != size[0] or nsize[1] != size[1]:
-                screen = pygame.display.set_mode(nsize)
-                size   = nsize
-                
-            game.__init__(Row_Count, cc)
-            if resizeGame:
-                Column_Count += 0.25
+            game.__init__(Row_Count, Column_Count)
             number_of_games_played += 1
             game.numGames          += 1
 

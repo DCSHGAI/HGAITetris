@@ -7,10 +7,10 @@ QueueSize
 HiddenRule
 True,True,True,True,True,True,True,True,True,True,True,True
 HiddenPiece
-False,False,True,False,True,False,True,False,True,False,True,True
+True,False,True,False,True,False,True,False,True,False,True,True
 IncreaseSpeedOverTime
 False,False,False,False,False,False,False,False,False,False,False,False
-TimeToActivateHiddenPiece=55
+TimeToActivateHiddenPiece=25
 checkpointpath
 tamer.hdf5
 HiddenPieceDelay
