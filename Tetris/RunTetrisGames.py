@@ -16,11 +16,10 @@ def StartGames():
     for Count in range(NumberOfTetrisGames):
         if  platform.system() == "Windows":
             print("The program has detected that you are running Windows and will run the appropriate command to spool up Tetris games.")
-            time.sleep(1)
             subprocess.Popen(".\Tetris.py " + str(Count) , shell=True)
         else:
             print("The program has detected that you are running Linux or Mac and will run the appropriate command to spool up Tetris games.")
             time.sleep(1)
-            subprocess.Popen("#!/usr/bin/env python Tetris.cpython-39.pyc " + str(Count) , shell=True)
+            subprocess.Popen("#!/usr/bin/env python Tetris.py " + str(Count) , shell=True)
 
 #StartGames()
