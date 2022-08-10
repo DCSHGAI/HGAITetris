@@ -27,7 +27,6 @@
     <Compile Include="TetrisSym.py" />
     <Compile Include="__main__.py" />
     <Compile Include="RunTetrisGames.py" />
-    <Compile Include="Tetris.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config.txt" />
