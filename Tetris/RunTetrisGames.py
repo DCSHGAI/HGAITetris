@@ -11,7 +11,7 @@ def StartGames():
     games = int(re.search(r'\d+', lines[1]).group())
 
     # Change this to control how many times the game is run
-    NumberOfTetrisGames = 8
+    NumberOfTetrisGames = games
 
     for Count in range(NumberOfTetrisGames):
         if  platform.system() == "Windows":

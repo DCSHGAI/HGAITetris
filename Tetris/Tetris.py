@@ -32,18 +32,18 @@ except ImportError:
     print("Could not import pywinauto! Have you run pip install pywinauto?")
     print("Pywinauto is not required and only for Windows but will allow you to switch Tetris panels if installed.")
 
-game_speed_modifier   = 0.25
-upper_speed_bound     = 0.01
+game_speed_modifier   = 100
+upper_speed_bound     = 0.1
 queue_size            = 4
 game_id               = 0
 Is_Master             = False
 Should_Load_Model     = False
-Activate_Hidden_Rule  = False
-Activate_Hidden_Piece = False
+Activate_Hidden_Rule  = True
+Activate_Hidden_Piece = True
 Activate_Hidden_Delay = 60
 Speed_Increase        = False
 hidden_piece_timer_elapsed = False
-Activate_Immovable_Piece = False;
+Activate_Immovable_Piece = False
 Tetris_Board_X = 100
 Tetris_Board_Y = 60
 X_Offset       = 100
@@ -334,7 +334,8 @@ class Tetris:
                             # Everything is being shifted down by one but if it is immovable prevent it from shifting.
                             if(bricks[j] != 6 and self.field[i1 - 1][j] != 6):
                                 self.field[i1][j] = self.field[i1 - 1][j]
-                            elif(bricks[j] != 6 and self.field[i1 - 1][j] == 6):
+                        if Activate_Immovable_Piece:
+                            if(bricks[j] != 6 and self.field[i1 - 1][j] == 6):
                                 self.field[i1][j] = 0
                                 bricks[j] = 6
                         else:
@@ -544,16 +545,12 @@ while not done:
     events = pygame.event.get()
     gs.GameStateEvaluation(game,events)
     
-    ## FIX THE CLOCK
     if runQuick == False:
         if game.playAI:
             time.sleep(game_speed_modifier)
         if Speed_Increase:
-            # Slowly increase the speed
-            game_speed_modifier *= 0.99
-            if game_speed_modifier < upper_speed_bound:
-                game_speed_modifier = upper_speed_bound
-        
+            game.go_down()
+    
     prevx = game.figure.x
     prevy = game.figure.y
     
