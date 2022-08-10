@@ -22,7 +22,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="StateEvaluation.py" />
-    <Compile Include="StateEvaluationBlank.py" />
     <Compile Include="TetrisCompetition.py" />
     <Compile Include="TetrisSym.py" />
     <Compile Include="__main__.py" />

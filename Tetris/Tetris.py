@@ -5,6 +5,14 @@
 # Modified by Bryce Bartlett
 # Original code from https://levelup.gitconnected.com/writing-tetris-in-python-2a16bddb5318
 
+############################################################################################################################################
+
+# HONOR SYSTEM: ONLY USE THIS TO DEBUG YOUR STATE EVALUATION. DO NOT PUT ANY BREAKPOINTS HERE!
+# DO NOT SCROLL BEYOND THIS. IF YOU WANT TO UNDERSTAND HOW THE GAME WORKS THEN LOOK AT TetrisCompetition.py
+
+############################################################################################################################################
+
+
 import os
 from typing import Counter
 import random
