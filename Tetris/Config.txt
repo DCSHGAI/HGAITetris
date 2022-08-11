@@ -21,7 +21,7 @@ Python Board X and Y
 100
 60
 Immovable Pieces
-False,False,False,False,False,False,False,False,False,False,False,False
+False,True,True,False,True,True,False,True,True,False,True,True
 Tetris Board Row Delta
 0
 Tetris Board Column Delta

@@ -51,7 +51,7 @@ Activate_Hidden_Piece = True
 Activate_Hidden_Delay = 60
 Speed_Increase        = False
 hidden_piece_timer_elapsed = False
-Activate_Immovable_Piece = False
+Activate_Immovable_Piece = True
 Tetris_Board_X = 100
 Tetris_Board_Y = 60
 X_Offset       = 100
@@ -504,8 +504,6 @@ game  = Tetris(Row_Count, Column_Count)
 StartTime = time.time()
 counter   = 0
 
-# CHANGE THIS TO ENABLE BOMBS & BRICKS
-# CURRENTLY BOMBS AND BRICKS ARE A PACKAGE DEAL
 enableBombs   = False
 
 # CHANGE THIS TO ENABLE RESIZING OF BOARD
