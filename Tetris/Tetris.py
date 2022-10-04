@@ -225,6 +225,8 @@ class Tetris:
     numGames  = 0
     numPieces = 0
     playAI    = False
+    Add_Invincible_Rows = True
+    Should_Shrink_Board = True
 
     def __init__(self, height, width):
         self.height = height
@@ -484,15 +486,12 @@ RED   = (255, 0, 0)
 # Define the screen size and settings
 size   = (500, 500)
 screen = pygame.display.set_mode(size)
-
 number_of_games_played = 0
 last_figure_appearance = -1
-
 done  = False
 clock = pygame.time.Clock()
 fps   = 30
 game  = Tetris(Row_Count, Column_Count)
-
 StartTime = time.time()
 counter   = 0
 
@@ -540,6 +539,19 @@ while not done:
     counter += game_speed_modifier
     if counter > 100000:
         counter = 0
+
+    # Invincible Row Section
+    if game.Add_Invincible_Rows == True and counter % 30 == 0:
+        if game.height > 10 and game.Should_Shrink_Board:
+             game.height = game.height - 1
+             if game.height == 10:
+                 game.Should_Shrink_Board = False
+        else:
+            game.height = game.height + 1
+            if game.height > 50:
+                game.height = 50
+                game.Should_Shrink_Board = True
+
 
     # GET COPY OF EVENTS
     events = pygame.event.get()
@@ -712,7 +724,6 @@ while not done:
                             game.zoom - 2,
                         ],
                     )
-
 
     ## TIME MEASUREMENT
     current_time = time.time()
