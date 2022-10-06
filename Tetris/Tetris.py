@@ -32,6 +32,7 @@ except ImportError:
     print("Could not import pywinauto! Have you run pip install pywinauto?")
     print("Pywinauto is not required and only for Windows but will allow you to switch Tetris panels if installed.")
 
+# These are default values that can be modified in the config file
 game_speed_modifier   = 100
 upper_speed_bound     = 0.1
 queue_size            = 4
@@ -44,6 +45,7 @@ Activate_Hidden_Delay = 60
 Speed_Increase        = False
 hidden_piece_timer_elapsed = False
 Activate_Immovable_Piece = False
+ShouldAddInvincibleRows = False
 Tetris_Board_X = 100
 Tetris_Board_Y = 60
 X_Offset       = 100
@@ -51,6 +53,7 @@ Row_Delta      = 0
 Column_Delta   = 0
 Row_Count      = 20
 Column_Count   = 10
+TetrisBoardYLowBound = 60
 pygame.init()
 
 # Use the number keys 0-9 to toggle between windows
@@ -157,7 +160,10 @@ def Read_Config():
             global Activate_Immovable_Piece
             global Row_Delta
             global Column_Delta
+            global TetrisBoardYLowBound
+            global ShouldAddInvincibleRows
             
+            # Variables are read in the order they appear in the config file
             game_speed_modifier = int(re.search(r"\d+", lines[3]).group()) * 0.01
             queue_size          = int(re.search(r"\d+", lines[5]).group())
             
@@ -186,6 +192,11 @@ def Read_Config():
             
             Row_Delta    = int(lines[25])
             Column_Delta = int(lines[27])
+
+            if lines[29].strip().split(",")[game_id] == "True":
+                ShouldAddInvincibleRows = True
+
+            TetrisBoardYLowBound = int(lines[31])
     except Exception as Reason:
         print("Error Reading Config.txt: " + str(Reason))
 
@@ -502,7 +513,6 @@ enableBombs   = False
 # CHANGE THIS TO ENABLE RESIZING OF BOARD
 # CURRENTLY BOARD GROWS BY 1 COL EVERY 4 GAMES
 resizeGame    = False
-
 pressing_down = False
 last_move     = ""
 auto_restart  = False
@@ -513,12 +523,13 @@ last_move     = ""
 auto_restart  = True
 rewardLearn   = False
 gameCounter   = 0
-
 prevx      = 0
 prevy      = 0
 runQuick   = False
 game_stats = []
 
+# Find the area of occupied space and if it exceeds
+# a certain amount apply a bonus to the score
 def Find_Area(game):
     if Activate_Hidden_Rule:
         Area = 0
@@ -540,7 +551,7 @@ while not done:
     if counter > 100000:
         counter = 0
 
-    # Invincible Row Section
+    # Oscillating Rows Control: Modifiable via TetrisBoardYLowBound and ShouldAddInvincibleRows in the config file
     if game.Add_Invincible_Rows == True and counter % 30 == 0:
         if game.height > 10 and game.Should_Shrink_Board:
              game.height = game.height - 1
@@ -551,7 +562,6 @@ while not done:
             if game.height > 50:
                 game.height = 50
                 game.Should_Shrink_Board = True
-
 
     # GET COPY OF EVENTS
     events = pygame.event.get()
@@ -616,8 +626,6 @@ while not done:
                 if resizeGame:
                     Column_Count += 0.25
                 
-                #game.__init__(Row_Count, int(Column_Count))
-
                 number_of_games_played += 1
                 game.numGames          = game.numGames + 1
                 last_move              = "restart"
@@ -805,6 +813,5 @@ while not done:
     
     pygame.display.flip()
     clock.tick(fps)
-    
-    
+       
 pygame.quit()
