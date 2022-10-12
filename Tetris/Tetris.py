@@ -45,7 +45,8 @@ Activate_Hidden_Delay = 60
 Speed_Increase        = False
 hidden_piece_timer_elapsed = False
 Activate_Immovable_Piece = False
-ShouldAddInvincibleRows = False
+ShouldAddInvincibleRowsTypeOne = True
+ShouldAddInvincibleRowsTypeTwo = False
 Tetris_Board_X = 100
 Tetris_Board_Y = 60
 X_Offset       = 100
@@ -54,6 +55,7 @@ Column_Delta   = 0
 Row_Count      = 20
 Column_Count   = 10
 TetrisBoardYLowBound = 60
+TickCounterForInvincibleRows = 30
 pygame.init()
 
 # Use the number keys 0-9 to toggle between windows
@@ -161,7 +163,8 @@ def Read_Config():
             global Row_Delta
             global Column_Delta
             global TetrisBoardYLowBound
-            global ShouldAddInvincibleRows
+            global ShouldAddInvincibleRowsTypeTwo
+            global TickCounterForInvincibleRows
             
             # Variables are read in the order they appear in the config file
             game_speed_modifier = int(re.search(r"\d+", lines[3]).group()) * 0.01
@@ -194,9 +197,11 @@ def Read_Config():
             Column_Delta = int(lines[27])
 
             if lines[29].strip().split(",")[game_id] == "True":
-                ShouldAddInvincibleRows = True
+                ShouldAddInvincibleRowsTypeTwo = True
 
             TetrisBoardYLowBound = int(lines[31])
+
+            TickCounterForInvincibleRows = int(lines[37])
     except Exception as Reason:
         print("Error Reading Config.txt: " + str(Reason))
 
@@ -236,8 +241,9 @@ class Tetris:
     numGames  = 0
     numPieces = 0
     playAI    = False
-    Add_Invincible_Rows = True
     Should_Shrink_Board = True
+    New_Figure_Created = True
+    Blocked_Rows = 0
 
     def __init__(self, height, width):
         self.height = height
@@ -265,6 +271,7 @@ class Tetris:
         self.figure = self.figure_queue.pop(0)
         self.newFig = 1
         self.numPieces += 1
+        self.New_Figure_Created = True
 
     def intersects(self):
         intersection = False
@@ -551,8 +558,20 @@ while not done:
     if counter > 100000:
         counter = 0
 
-    # Oscillating Rows Control: Modifiable via TetrisBoardYLowBound and ShouldAddInvincibleRows in the config file
-    if game.Add_Invincible_Rows == True and counter % 30 == 0:
+    # Oscillating Rows Control: Modifiable via TetrisBoardYLowBound and ShouldAddInvincibleRowsTypeTwo in the config file
+    if ShouldAddInvincibleRowsTypeTwo == True and counter % TickCounterForInvincibleRows == 0:
+        if game.height > 10 and game.Should_Shrink_Board:
+             game.height = game.height - 1
+             if game.height == 10:
+                 game.Should_Shrink_Board = False
+        else:
+            game.height = game.height + 1
+            if game.height > 50:
+                game.height = 50
+                game.Should_Shrink_Board = True
+
+    if ShouldAddInvincibleRowsTypeOne and game.New_Figure_Created:
+        game.New_Figure_Created = False
         if game.height > 10 and game.Should_Shrink_Board:
              game.height = game.height - 1
              if game.height == 10:
@@ -705,17 +724,20 @@ while not done:
                 [game.x + game.zoom * j, game.y + game.zoom * i, game.zoom, game.zoom],
                 1,
             )
-            if game.field[i][j] > 0:
-                pygame.draw.rect(
-                    screen,
-                    colors[game.field[i][j]],
-                    [
-                        game.x + game.zoom * j + 1,
-                        game.y + game.zoom * i + 1,
-                        game.zoom - 2,
-                        game.zoom - 1,
-                    ],
-                )
+            try:
+                if game.field[i][j] > 0:
+                    pygame.draw.rect(
+                        screen,
+                        colors[game.field[i][j]],
+                        [
+                            game.x + game.zoom * j + 1,
+                            game.y + game.zoom * i + 1,
+                            game.zoom - 2,
+                            game.zoom - 1,
+                        ],
+                    )
+            except:
+                print("Out of range")
 
     if game.figure is not None:
         for i in range(4):

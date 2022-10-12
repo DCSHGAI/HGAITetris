@@ -26,7 +26,13 @@ Tetris Board Row Delta
 0
 Tetris Board Column Delta
 0
-ShouldAddInvincibleRows
+ShouldAddInvincibleRowsTypeTwo
 False
 TetrisBoardYLowBound
 15
+ShouldAddInvincibleRowsTypeOne
+False
+ShouldAddInvincibleRowsTypeThree
+False
+TickCounterForInvincibleRows
+60
