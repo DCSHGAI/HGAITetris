@@ -5,6 +5,7 @@
 # Modified by Bryce Bartlett
 # Original code from https://levelup.gitconnected.com/writing-tetris-in-python-2a16bddb5318
 
+from inspect import BlockFinder
 import os
 from typing import Counter
 import random
@@ -77,6 +78,7 @@ colors = [
     (80, 134, 22),
     (180, 34, 22),
     (180, 34, 122),
+    (128,128,128)
 ]
 
 class Figure:
@@ -132,7 +134,7 @@ class Figure:
             self.type = random.randint(0, len(self.figures) - 1)
         else:
             self.type = random.randint(0, len(self.figures) - 2)
-        self.color = random.randint(1, len(colors) - 1)
+        self.color = random.randint(1, len(colors) - 2)
         self.rotation = 0
 
     def image(self):
@@ -214,6 +216,7 @@ else:
 
 Read_Config()
 
+# Game representation
 class Tetris:
     level = 2
     score = 0
@@ -241,9 +244,9 @@ class Tetris:
     numGames  = 0
     numPieces = 0
     playAI    = False
-    Should_Shrink_Board = True
-    New_Figure_Created = True
-    Blocked_Rows = 0
+    New_Figure_Created = False
+    Shift_Playing_Field_Up = True
+    Current_Shift_Level = 1
 
     def __init__(self, height, width):
         self.height = height
@@ -272,6 +275,7 @@ class Tetris:
         self.newFig = 1
         self.numPieces += 1
         self.New_Figure_Created = True
+        self.Current_Shift_Level += 1
 
     def intersects(self):
         intersection = False
@@ -359,6 +363,8 @@ class Tetris:
                                 self.field[i1][j] = 0
                                 bricks[j] = 6
                         else:
+                            if(self.field[i1][j] == 7):
+                                return
                             self.field[i1][j] = self.field[i1 - 1][j]
                 if Activate_Hidden_Rule:
                     Find_Area(self)
@@ -548,6 +554,30 @@ def Find_Area(game):
             game.score += 100
             game.should_flash_reward_text = True
 
+def Shift_Playing_Field(game):
+    Field = game.field
+    if game.Shift_Playing_Field_Up:
+        Field[0][0] = 7
+        Field[0][1] = 7
+        Field[0][2] = 7
+        Field[0][3] = 7
+        Field[0][4] = 7
+        Field[0][5] = 7
+        Field[0][6] = 7
+        Field[0][7] = 7
+        Field[0][8] = 7
+        Field[0][9] = 7
+
+        Field = numpy.roll(Field, -1, 0)
+        # Block off the rows below and color them.
+
+
+        game.field = Field
+
+    else:
+        Field = numpy.roll(Field, 1, 0)
+        game.field = Field
+
 # Main game infinite loop
 while not done:
     move = False
@@ -560,27 +590,17 @@ while not done:
 
     # Oscillating Rows Control: Modifiable via TetrisBoardYLowBound and ShouldAddInvincibleRowsTypeTwo in the config file
     if ShouldAddInvincibleRowsTypeTwo == True and counter % TickCounterForInvincibleRows == 0:
-        if game.height > 10 and game.Should_Shrink_Board:
-             game.height = game.height - 1
-             if game.height == 10:
-                 game.Should_Shrink_Board = False
-        else:
-            game.height = game.height + 1
-            if game.height > 50:
-                game.height = 50
-                game.Should_Shrink_Board = True
+        print("Copy Type One Here")
 
     if ShouldAddInvincibleRowsTypeOne and game.New_Figure_Created:
+        # Set upper limit and reverse
+        if(game.Current_Shift_Level + 5 == game):
+            game.Shift_Playing_Field_Up = False
+        if(game.Current_Shift_Level == 0):
+            game.Shift_Playing_Field_Up = True
+
+        Shift_Playing_Field(game)
         game.New_Figure_Created = False
-        if game.height > 10 and game.Should_Shrink_Board:
-             game.height = game.height - 1
-             if game.height == 10:
-                 game.Should_Shrink_Board = False
-        else:
-            game.height = game.height + 1
-            if game.height > 50:
-                game.height = 50
-                game.Should_Shrink_Board = True
 
     # GET COPY OF EVENTS
     events = pygame.event.get()
@@ -724,20 +744,17 @@ while not done:
                 [game.x + game.zoom * j, game.y + game.zoom * i, game.zoom, game.zoom],
                 1,
             )
-            try:
-                if game.field[i][j] > 0:
-                    pygame.draw.rect(
-                        screen,
-                        colors[game.field[i][j]],
+            if game.field[i][j] > 0:
+                pygame.draw.rect(
+                screen,
+                colors[game.field[i][j]],
                         [
                             game.x + game.zoom * j + 1,
                             game.y + game.zoom * i + 1,
                             game.zoom - 2,
                             game.zoom - 1,
                         ],
-                    )
-            except:
-                print("Out of range")
+                )
 
     if game.figure is not None:
         for i in range(4):
@@ -829,7 +846,6 @@ while not done:
 
     screen.blit(text, [0, 0])
     screen.blit(ai_text,[0, 19])
-    #screen.blit(reward_text, [0, 19]) #25
     screen.blit(text_last_button_used, [0, 38]) #50
     screen.blit(runtime_text,[0,57])
     
