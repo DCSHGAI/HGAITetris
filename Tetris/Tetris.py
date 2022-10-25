@@ -46,8 +46,9 @@ Activate_Hidden_Delay = 60
 Speed_Increase        = False
 hidden_piece_timer_elapsed = False
 Activate_Immovable_Piece = False
-ShouldAddInvincibleRowsTypeOne = True
+ShouldAddInvincibleRowsTypeOne = False
 ShouldAddInvincibleRowsTypeTwo = False
+ShouldAddInvincibleRowsTypeThree = True
 Tetris_Board_X = 100
 Tetris_Board_Y = 60
 X_Offset       = 100
@@ -275,7 +276,6 @@ class Tetris:
         self.newFig = 1
         self.numPieces += 1
         self.New_Figure_Created = True
-        self.Current_Shift_Level += 1
 
     def intersects(self):
         intersection = False
@@ -554,29 +554,71 @@ def Find_Area(game):
             game.score += 100
             game.should_flash_reward_text = True
 
+
+# Shift the playing field up or down
 def Shift_Playing_Field(game):
     Field = game.field
-    if game.Shift_Playing_Field_Up:
-        Field[0][0] = 7
-        Field[0][1] = 7
-        Field[0][2] = 7
-        Field[0][3] = 7
-        Field[0][4] = 7
-        Field[0][5] = 7
-        Field[0][6] = 7
-        Field[0][7] = 7
-        Field[0][8] = 7
-        Field[0][9] = 7
 
-        Field = numpy.roll(Field, -1, 0)
-        # Block off the rows below and color them.
-
-
-        game.field = Field
-
+    # This shifts up the field evenly
+    if not ShouldAddInvincibleRowsTypeThree:
+        if game.Shift_Playing_Field_Up:
+            game.Current_Shift_Level += 1
+            Field[0][0] = 7
+            Field[0][1] = 7
+            Field[0][2] = 7
+            Field[0][3] = 7
+            Field[0][4] = 7
+            Field[0][5] = 7
+            Field[0][6] = 7
+            Field[0][7] = 7
+            Field[0][8] = 7
+            Field[0][9] = 7
+            Field = numpy.roll(Field, -1, 0)
+            game.field = Field
+        else:
+            Field = numpy.roll(Field, 1, 0)
+            game.Current_Shift_Level -= 1
+            Field[0][0] = 0
+            Field[0][1] = 0
+            Field[0][2] = 0
+            Field[0][3] = 0
+            Field[0][4] = 0
+            Field[0][5] = 0
+            Field[0][6] = 0
+            Field[0][7] = 0
+            Field[0][8] = 0
+            Field[0][9] = 0
+            game.field = Field
     else:
-        Field = numpy.roll(Field, 1, 0)
-        game.field = Field
+    # This shifts up the field unevenly
+         if game.Shift_Playing_Field_Up:
+            game.Current_Shift_Level += 1
+            #Field[0][0] = 7
+            Field[0][1] = 7
+            #Field[0][2] = 7
+            Field[0][3] = 7
+            #Field[0][4] = 7
+            Field[0][5] = 7
+            #Field[0][6] = 7
+            Field[0][7] = 7
+            #Field[0][8] = 7
+            Field[0][9] = 7
+            Field = numpy.roll(Field, -1, 0)
+            game.field = Field
+         else:
+            Field = numpy.roll(Field, 1, 0)
+            game.Current_Shift_Level -= 1
+            Field[0][0] = 0
+            #Field[0][1] = 0
+            Field[0][2] = 0
+            #Field[0][3] = 0
+            Field[0][4] = 0
+            #Field[0][5] = 0
+            Field[0][6] = 0
+            #Field[0][7] = 0
+            Field[0][8] = 0
+            #Field[0][9] = 0
+            game.field = Field
 
 # Main game infinite loop
 while not done:
@@ -589,16 +631,28 @@ while not done:
         counter = 0
 
     # Oscillating Rows Control: Modifiable via TetrisBoardYLowBound and ShouldAddInvincibleRowsTypeTwo in the config file
+    if ShouldAddInvincibleRowsTypeThree == True and counter % TickCounterForInvincibleRows == 0:
+                        # Set upper limit and reverse
+        if(game.Current_Shift_Level >= 10):
+            game.Shift_Playing_Field_Up = False
+        if(game.Current_Shift_Level <= 4):
+            game.Shift_Playing_Field_Up = True
+        Shift_Playing_Field(game)
+
     if ShouldAddInvincibleRowsTypeTwo == True and counter % TickCounterForInvincibleRows == 0:
-        print("Copy Type One Here")
+                # Set upper limit and reverse
+        if(game.Current_Shift_Level >= 10):
+            game.Shift_Playing_Field_Up = False
+        if(game.Current_Shift_Level <= 4):
+            game.Shift_Playing_Field_Up = True
+        Shift_Playing_Field(game)
 
     if ShouldAddInvincibleRowsTypeOne and game.New_Figure_Created:
         # Set upper limit and reverse
-        if(game.Current_Shift_Level + 5 == game):
+        if(game.Current_Shift_Level >= 10):
             game.Shift_Playing_Field_Up = False
-        if(game.Current_Shift_Level == 0):
+        if(game.Current_Shift_Level <= 4):
             game.Shift_Playing_Field_Up = True
-
         Shift_Playing_Field(game)
         game.New_Figure_Created = False
 
@@ -822,6 +876,7 @@ while not done:
     if game.figure_queue[2].type is not None:
         game.draw_queue(game.figure_queue[2], 2, screen)
     if game.state == "gameover":
+        game.Current_Shift_Level = 1
         game_stats.append([game.numGames, game.numPieces, game.score])
         textfile = open("gameStats" + str(game.gameid) + ".csv", "w")
         for s in range(len(game_stats)):

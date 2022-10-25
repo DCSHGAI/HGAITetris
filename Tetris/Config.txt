@@ -32,6 +32,8 @@ TetrisBoardYLowBound
 15
 ShouldAddInvincibleRowsTypeOne
 False
+Should AddInvincibleRowsTypeTwo
+True
 ShouldAddInvincibleRowsTypeThree
 False
 TickCounterForInvincibleRows
