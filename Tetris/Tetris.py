@@ -13,6 +13,10 @@ import platform
 import sys
 import re
 import time
+# Email
+import smtplib
+import ssl
+
 try:
     import tensorflow
     import numpy
@@ -25,13 +29,6 @@ try:
     import pygame
 except:
     print("Could not import Pygame! Have you run pip install pygame?")
-
-# This is an optional import that allows you to switch panels with the number keys (Windows Only)
-try:
-    from pywinauto import Application
-except ImportError:
-    print("Could not import pywinauto! Have you run pip install pywinauto?")
-    print("Pywinauto is not required and only for Windows but will allow you to switch Tetris panels if installed.")
 
 # These are default values that can be modified in the config file
 game_speed_modifier   = 100
@@ -48,7 +45,7 @@ hidden_piece_timer_elapsed = False
 Activate_Immovable_Piece = False
 ShouldAddInvincibleRowsTypeOne = False
 ShouldAddInvincibleRowsTypeTwo = False
-ShouldAddInvincibleRowsTypeThree = True
+ShouldAddInvincibleRowsTypeThree = False
 Tetris_Board_X = 100
 Tetris_Board_Y = 60
 X_Offset       = 100
@@ -215,7 +212,7 @@ if len(sys.argv) > 1:
 else:
     pygame.display.set_caption("ARL A.I Tetris " + str(game_id))
 
-Read_Config()
+#Read_Config()
 
 # Game representation
 class Tetris:
@@ -449,7 +446,7 @@ class Tetris:
     # Draw rectangles off to the right to represent the next 3 shapes in the queue.
     def draw_queue(self, figure, position_in_queue, screen):
         color = colors[figure.color]
-        xo    = X_Offset + (self.width - 10) * 25
+        xo    = 25
         if figure.type == 0:
             # Column
             pygame.draw.rect(
@@ -661,8 +658,8 @@ while not done:
     gs.GameStateEvaluation(game,events)
     
     if runQuick == False:
-        if game.playAI:
-            time.sleep(game_speed_modifier)
+        #if game.playAI:
+        #    time.sleep(game_speed_modifier)
         if Speed_Increase:
             game.go_down()
     
@@ -761,28 +758,6 @@ while not done:
                     + "\n"
                 )
                 textfile.close()
-            # Used number keys to switch panels if they exist
-            
-            if event.key == pygame.K_0 and platform.system() == "Windows":
-                Set_Focus(0)
-            if event.key == pygame.K_1 and platform.system() == "Windows":
-                Set_Focus(1)
-            if event.key == pygame.K_2 and platform.system() == "Windows":
-                Set_Focus(2)
-            if event.key == pygame.K_3 and platform.system() == "Windows":
-                Set_Focus(3)
-            if event.key == pygame.K_4 and platform.system() == "Windows":
-                Set_Focus(4)
-            if event.key == pygame.K_5 and platform.system() == "Windows":
-                Set_Focus(5)
-            if event.key == pygame.K_6 and platform.system() == "Windows":
-                Set_Focus(6)
-            if event.key == pygame.K_7 and platform.system() == "Windows":
-                Set_Focus(7)
-            if event.key == pygame.K_8 and platform.system() == "Windows":
-                Set_Focus(8)
-            if event.key == pygame.K_9 and platform.system() == "Windows":
-                Set_Focus(9)
 
     if event.type == pygame.KEYUP:
         if event.key == pygame.K_DOWN:
@@ -908,3 +883,4 @@ while not done:
     clock.tick(fps)
        
 pygame.quit()
+

@@ -4,13 +4,14 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>836e198a-a28b-4287-858c-fcae5dc9dace</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>__main__.py</StartupFile>
+    <StartupFile>Tetris.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>Tetris</Name>
     <RootNamespace>Tetris</RootNamespace>
+    <InterpreterId>MSBuild|GrummanTest|$(MSBuildProjectFullPath)</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -31,6 +32,17 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Interpreter Include="GrummanTest\">
+      <Id>GrummanTest</Id>
+      <Version>3.10</Version>
+      <Description>GrummanTest (Python 3.10)</Description>
+      <InterpreterPath>Scripts\python.exe</InterpreterPath>
+      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
+      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
+      <Architecture>X64</Architecture>
+    </Interpreter>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
