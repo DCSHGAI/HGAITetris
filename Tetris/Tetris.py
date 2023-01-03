@@ -28,7 +28,7 @@ except:
 try:
     import pygame
 except:
-    print("Could not import Pygame! Have you run pip install pygame?")
+    print("Could not import Pygame!")
 
 # These are default values that can be modified in the config file
 game_speed_modifier   = 100
@@ -43,7 +43,7 @@ Activate_Hidden_Delay = 60
 Speed_Increase        = False
 hidden_piece_timer_elapsed = False
 Activate_Immovable_Piece = False
-ShouldAddInvincibleRowsTypeOne = False
+ShouldAddInvincibleRowsTypeOne = True
 ShouldAddInvincibleRowsTypeTwo = False
 ShouldAddInvincibleRowsTypeThree = False
 Tetris_Board_X = 100
