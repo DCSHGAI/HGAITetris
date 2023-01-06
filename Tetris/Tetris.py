@@ -16,14 +16,9 @@ import time
 # Email
 import smtplib
 import ssl
+import numpy
+import StateEvaluation as gs
 
-try:
-    import tensorflow
-    import numpy
-    import StateEvaluation as gs
-except:
-    print('Problem importing Tamer/StateEvaluation... Importing blank StateEvaluation instead')
-    import StateEvaluationBlank as gs
 
 try:
     import pygame
@@ -37,8 +32,8 @@ queue_size            = 4
 game_id               = 0
 Is_Master             = False
 Should_Load_Model     = False
-Activate_Hidden_Rule  = True
-Activate_Hidden_Piece = True
+Activate_Hidden_Rule  = False
+Activate_Hidden_Piece = False
 Activate_Hidden_Delay = 60
 Speed_Increase        = False
 hidden_piece_timer_elapsed = False
@@ -382,7 +377,6 @@ class Tetris:
 
     def go_down(self):
         game.newFig = 0
-
         self.lastMove = 0  # GO DOWN
         self.figure.y += 1
         if self.intersects():
@@ -657,11 +651,11 @@ while not done:
     events = pygame.event.get()
     gs.GameStateEvaluation(game,events)
     
-    if runQuick == False:
+    #if runQuick == False:
         #if game.playAI:
         #    time.sleep(game_speed_modifier)
-        if Speed_Increase:
-            game.go_down()
+        #if Speed_Increase:
+        #    game.go_down()
     
     prevx = game.figure.x
     prevy = game.figure.y

@@ -299,8 +299,10 @@ def GameStateEvaluation(game,events):
             elif action_now == 3:
                 game.rotate()
             else:
+                pygame.time.wait(300)
                 game.go_down()
         else:
+            pygame.time.wait(300)
             game.go_down()  
         tamer.state = 'AI = On; ' + tamer.classState
     else:

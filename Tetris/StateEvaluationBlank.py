@@ -22,4 +22,4 @@ def GameStateEvaluation(game,events):
         elif action_now == 3:
             game.rotate()
         else:
-            game.go_down()  
+            game.go_down() 
