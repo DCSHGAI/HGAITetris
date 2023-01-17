@@ -284,22 +284,6 @@ class Tetris:
         return intersection
 
     def break_lines(self):
-        # lines = 0
-        # for i in range(1, self.height):
-        #     zeros = 0
-        #     for j in range(self.width):
-        #         if self.field[i][j] == 0:
-        #             zeros += 1
-        #     if zeros == 0:
-        #         lines += 1
-        #         for i1 in range(i, 1, -1):
-        #             for j in range(self.width):
-        #                 # Everything is being shifted down by one but if it is immovable prevent it from shifting.
-        #                 if(self.field[i1][j] != 6 and self.field[i1-1][j] != 6):
-        #                     self.field[i1][j] = self.field[i1 - 1][j]
-        #         if Activate_Hidden_Rule:
-        #             Find_Area(self)
-        
         #SG BOMB TEST
         ## BOMB DYNAMICS
         ## 1. BOMBS DELETE WHAT THEY TOUCH BEFORE YOU GET POINTS
@@ -358,6 +342,8 @@ class Tetris:
                             if(self.field[i1][j] == 7):
                                 return
                             self.field[i1][j] = self.field[i1 - 1][j]
+                game.score += 1
+
                 if Activate_Hidden_Rule:
                     Find_Area(self)
 
@@ -545,7 +531,6 @@ def Find_Area(game):
             game.score += 100
             game.should_flash_reward_text = True
 
-
 # Shift the playing field up or down
 def Shift_Playing_Field(game):
     Field = game.field
@@ -699,7 +684,7 @@ while not done:
             if event.key == pygame.K_ESCAPE:
                 game.newFig   = 0
                 game.lastMove = 0
-                
+
                 cc    = int(Column_Count)
                 nsize = [500+(cc-10)*25,500]
                 if nsize[0] != size[0] or nsize[1] != size[1]:
@@ -808,13 +793,14 @@ while not done:
         
     font                  = pygame.font.SysFont("Calibri", 18, True, False)#25
     font1                 = pygame.font.SysFont("Calibri", 65, True, False)#65
+    small_font = pygame.font.SysFont("Calibri", 10, True, False)#65
     text                  = font.render("Score: " + str(game.score), True, BLACK)
     if(gs.tamer != None):
         ai_text               = font.render(gs.tamer.state, True, BLACK)
     else:
         ai_text           = font.render('AI. Off', True, BLACK)
         
-    runtime_text          = font.render("RunTime: " + str(int(current_time-StartTime)),True,BLACK)
+    runtime_text          = font.render(" RunTime: " + str(int(current_time-StartTime)),True,BLACK)
     text_game_over        = font1.render("Game Over", True, (255, 125, 0))
     text_game_over1       = font1.render("Press ESC", True, (255, 215, 0))
     text_last_button_used = font.render(last_move, True, (0, 0, 0))
@@ -868,11 +854,29 @@ while not done:
             number_of_games_played += 1
             game.numGames          += 1
 
+    # Control Text
+    Control_Text = font.render("CONTROLS", True, (0, 0, 0))
+    Left_Text = small_font.render("Left Arrow - Go Left", True, (0, 0, 0))
+    Up_Text = small_font.render("Up Arrow - Rotate Piece", True, (0, 0, 0))
+    Right_Text = small_font.render("Right Arrow - Go Left", True, (0, 0, 0))
+    Down_Text = small_font.render("Down Arrow - Go Down", True, (0, 0, 0))
+    AI_Text = small_font.render("A Key - Toggle A.I", True, (0, 0, 0))
+    Encourage_Text = small_font.render("J Key - Encourage A.I", True, (0, 0, 0))
+    Discourage_Text = small_font.render("K Key - Discourage A.I", True, (0, 0, 0))
+
     screen.blit(text, [0, 0])
     screen.blit(ai_text,[0, 19])
     screen.blit(text_last_button_used, [0, 38]) #50
-    screen.blit(runtime_text,[0,57])
-    
+    #screen.blit(runtime_text,[0,57])
+    screen.blit(Control_Text, [0, 80])
+    screen.blit(Up_Text, [0, 100])
+    screen.blit(Left_Text, [0, 120])
+    screen.blit(Right_Text, [0, 140])
+    screen.blit(Down_Text, [0, 160])
+    screen.blit(AI_Text, [0, 180])
+    screen.blit(Encourage_Text, [0, 200])
+    screen.blit(Discourage_Text, [0, 220])
+
     pygame.display.flip()
     clock.tick(fps)
        
