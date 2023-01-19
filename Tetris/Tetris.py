@@ -7,9 +7,7 @@
 
 from inspect import BlockFinder
 import os
-from typing import Counter
 import random
-import platform
 import sys
 import re
 import time
@@ -38,7 +36,8 @@ Activate_Hidden_Delay = 60
 Speed_Increase        = False
 hidden_piece_timer_elapsed = False
 Activate_Immovable_Piece = False
-ShouldAddInvincibleRowsTypeOne = True
+Vertical_Line_Break_Mode = False
+ShouldAddInvincibleRowsTypeOne = False
 ShouldAddInvincibleRowsTypeTwo = False
 ShouldAddInvincibleRowsTypeThree = False
 Tetris_Board_X = 100
@@ -296,7 +295,6 @@ class Tetris:
                         self.field[i][j] = 0
                         if i < self.height-1 :
                             self.field[i+1][j] = 0
-            
             for i in range(self.height):
                 for j in range(self.width):
                     if self.field[i][j] == 100:
@@ -310,45 +308,62 @@ class Tetris:
         ##      3.2 FORMING AN ENTIRE ROW OF BRICKS (this is a necessity)
         ##   4. BRICKS ARE HARD CODED TO A COLOR
         lines = 0
-        for i in range(1, self.height):
-            zeros = 0
-            brcks = 0
+        if Vertical_Line_Break_Mode:
             for j in range(self.width):
-                if self.field[i][j] == 0:
-                    zeros += 1
-                if self.field[i][j] == 6:
-                    brcks += 1
-            if zeros == 0:
-                bricks = []
-                if brcks==self.width:
-                    for j in range(self.width):
-                        bricks.append(1)
-                else:
-                    for j in range(self.width):
-                        bricks.append(self.field[i][j])
+                for i in range(0, self.height):
+                    # Look down 5 spaces and if each one is non-zero then break the lines
+                    if i + 5 < self.height:
+                        print(str(i) + " " + str(j))
+                        if self.field[i][j] != 0 and self.field[i + 1][j] != 0 and self.field[i + 2][j] != 0 and self.field[i + 3][j] != 0 and self.field[i + 4][j] != 0 and self.field[i + 5][j] != 0:
+                            print("Break Line!")
+                            self.field[i][j] = 0
+                            self.field[i + 1][j] = 0
+                            self.field[i + 2][j] = 0
+                            self.field[i + 3][j] = 0
+                            self.field[i + 4][j] = 0
+                            # Shift things down
+
+
+        if not Vertical_Line_Break_Mode:
+            for i in range(1, self.height):
+                zeros = 0
+                brcks = 0
+                for j in range(self.width):
+                    if self.field[i][j] == 0:
+                        zeros += 1
+                    if self.field[i][j] == 6:
+                        brcks += 1
+                if zeros == 0:
+                    bricks = []
+                    if brcks==self.width:
+                        for j in range(self.width):
+                            bricks.append(1)
+                    else:
+                        for j in range(self.width):
+                            bricks.append(self.field[i][j])
                     
-                lines += 1
-                for i1 in range(i, 1, -1):
-                    for j in range(self.width):
-                        if enableBombs:
-                            # Everything is being shifted down by one but if it is immovable prevent it from shifting.
-                            if(bricks[j] != 6 and self.field[i1 - 1][j] != 6):
+                    lines += 1
+                    for i1 in range(i, 1, -1):
+                        for j in range(self.width):
+                            if enableBombs:
+                                # Everything is being shifted down by one but if it is immovable prevent it from shifting.
+                                if(bricks[j] != 6 and self.field[i1 - 1][j] != 6):
+                                    self.field[i1][j] = self.field[i1 - 1][j]
+                            if Activate_Immovable_Piece:
+                                if(bricks[j] != 6 and self.field[i1 - 1][j] == 6):
+                                    self.field[i1][j] = 0
+                                    bricks[j] = 6
+                            else:
+                                if(self.field[i1][j] == 7):
+                                    return
                                 self.field[i1][j] = self.field[i1 - 1][j]
-                        if Activate_Immovable_Piece:
-                            if(bricks[j] != 6 and self.field[i1 - 1][j] == 6):
-                                self.field[i1][j] = 0
-                                bricks[j] = 6
-                        else:
-                            if(self.field[i1][j] == 7):
-                                return
-                            self.field[i1][j] = self.field[i1 - 1][j]
-                game.score += 1
+                    game.score += 1
 
-                if Activate_Hidden_Rule:
-                    Find_Area(self)
+                    if Activate_Hidden_Rule:
+                        Find_Area(self)
 
-        # This is the base scoring system move or change this to modify how your score updates
-        self.update_score(lines**2)
+            # This is the base scoring system move or change this to modify how your score updates
+            self.update_score(lines**2)
 
     # Controls for the game
 
@@ -596,9 +611,11 @@ def Shift_Playing_Field(game):
             #Field[0][9] = 0
             game.field = Field
 
+Pause_Game = False
+Saved_Field = game.field
 # Main game infinite loop
 while not done:
-    move = False
+
     if game.figure is None:
         game.new_figure()
         last_figure_appearance = pygame.time.Clock()
@@ -654,7 +671,7 @@ while not done:
     for event in events:
         if event.type == pygame.QUIT:
             done = True
-        
+
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
                 game.rotate()
@@ -684,6 +701,10 @@ while not done:
             if event.key == pygame.K_ESCAPE:
                 game.newFig   = 0
                 game.lastMove = 0
+
+            if event.key == pygame.K_p:
+                Pause_Game = True
+                Saved_Field = game.field
 
                 cc    = int(Column_Count)
                 nsize = [500+(cc-10)*25,500]
@@ -823,7 +844,6 @@ while not done:
     # Activate the hidden rule after specified delay in config file
     if counter > Activate_Hidden_Delay:
         hidden_piece_timer_elapsed = True
-
     if game.figure_queue[0].type is not None:
         game.draw_queue(game.figure_queue[0], 0, screen)
     if game.figure_queue[1].type is not None:
@@ -879,6 +899,15 @@ while not done:
 
     pygame.display.flip()
     clock.tick(fps)
-       
+
+    while Pause_Game:
+        pygame.display.flip()
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_p:
+                    # If the player paused the game we need to reset the field to what it was before
+                    Pause_Game = False
+                    game.field = Saved_Field
 pygame.quit()
 
