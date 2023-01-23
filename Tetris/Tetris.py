@@ -36,7 +36,7 @@ Activate_Hidden_Delay = 60
 Speed_Increase        = False
 hidden_piece_timer_elapsed = False
 Activate_Immovable_Piece = False
-Vertical_Line_Break_Mode = False
+Vertical_Line_Break_Mode = True
 ShouldAddInvincibleRowsTypeOne = False
 ShouldAddInvincibleRowsTypeTwo = False
 ShouldAddInvincibleRowsTypeThree = False
@@ -310,18 +310,22 @@ class Tetris:
         lines = 0
         if Vertical_Line_Break_Mode:
             for j in range(self.width):
+                Line_Length = 0
+                Line_Y_Position = 0
                 for i in range(0, self.height):
-                    # Look down 5 spaces and if each one is non-zero then break the lines
-                    if i + 5 < self.height:
-                        print(str(i) + " " + str(j))
-                        if self.field[i][j] != 0 and self.field[i + 1][j] != 0 and self.field[i + 2][j] != 0 and self.field[i + 3][j] != 0 and self.field[i + 4][j] != 0 and self.field[i + 5][j] != 0:
-                            print("Break Line!")
-                            self.field[i][j] = 0
-                            self.field[i + 1][j] = 0
-                            self.field[i + 2][j] = 0
-                            self.field[i + 3][j] = 0
-                            self.field[i + 4][j] = 0
-                            # Shift things down
+                    if self.field[i][j] != 0:
+                        Line_Length += 1
+                    else:
+                        Line_Y_Position = i
+                        Line_Length = 0
+                    if Line_Length >= 5:
+                        self.field[Line_Y_Position][j] = 0
+                        self.field[Line_Y_Position + 1][j] = 0
+                        self.field[Line_Y_Position + 2][j] = 0
+                        self.field[Line_Y_Position + 3][j] = 0
+                        self.field[Line_Y_Position + 4][j] = 0
+                        Line_Length = 0
+
 
 
         if not Vertical_Line_Break_Mode:
@@ -734,6 +738,12 @@ while not done:
                 else:
                     game.playAI = False
                 last_move = "Toggle AI"
+
+            if event.key == pygame.K_t:
+                if Vertical_Line_Break_Mode:
+                    Vertical_Line_Break_Mode = False
+                else:
+                    Vertical_Line_Break_Mode = True
                 
             if event.key == pygame.K_q:
                 if runQuick == True:
@@ -883,6 +893,7 @@ while not done:
     AI_Text = small_font.render("A Key - Toggle A.I", True, (0, 0, 0))
     Encourage_Text = small_font.render("J Key - Encourage A.I", True, (0, 0, 0))
     Discourage_Text = small_font.render("K Key - Discourage A.I", True, (0, 0, 0))
+    Vertical_Toggle_Text = small_font.render("T Key - Vertical Mode", True, (0, 0, 0))
 
     screen.blit(text, [0, 0])
     screen.blit(ai_text,[0, 19])
@@ -896,6 +907,7 @@ while not done:
     screen.blit(AI_Text, [0, 180])
     screen.blit(Encourage_Text, [0, 200])
     screen.blit(Discourage_Text, [0, 220])
+    screen.blit(Vertical_Toggle_Text, [0, 240])
 
     pygame.display.flip()
     clock.tick(fps)
