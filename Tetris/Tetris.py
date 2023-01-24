@@ -1,10 +1,11 @@
-# HGAI Tetris
+﻿# HGAI Tetris
 # Unlimited Rights assigned to the U.S. Government
 # This material may be reproduced by or for the U.S Government pursuant to the copyright license under the clause at DFARS 252.227-7014.
 # This notice must appear in all copies of this file and its derivatives.
 # Modified by Bryce Bartlett
 # Original code from https://levelup.gitconnected.com/writing-tetris-in-python-2a16bddb5318
 
+from dataclasses import field
 from inspect import BlockFinder
 import os
 import random
@@ -16,7 +17,6 @@ import smtplib
 import ssl
 import numpy
 import StateEvaluation as gs
-
 
 try:
     import pygame
@@ -49,6 +49,8 @@ Row_Count      = 20
 Column_Count   = 10
 TetrisBoardYLowBound = 60
 TickCounterForInvincibleRows = 30
+Pause_Game = True
+Saved_Field = []
 pygame.init()
 
 # Use the number keys 0-9 to toggle between windows
@@ -127,7 +129,8 @@ class Figure:
         else:
             self.type = random.randint(0, len(self.figures) - 2)
         self.color = random.randint(1, len(colors) - 2)
-        self.rotation = 0
+        self.rotation = 0       
+
 
     def image(self):
         return self.figures[self.type][self.rotation]
@@ -239,6 +242,7 @@ class Tetris:
     New_Figure_Created = False
     Shift_Playing_Field_Up = True
     Current_Shift_Level = 1
+    Empty_Field = []
 
     def __init__(self, height, width):
         self.height = height
@@ -248,12 +252,12 @@ class Tetris:
         self.reward = 0
         self.state = "start"
         self.numPieces = 0
-
         for i in range(height):
             new_line = []
             for j in range(width):
                 new_line.append(0)
             self.field.append(new_line)
+        self.Empty_Field = self.field
 
     def new_figure(self):
         while len(self.figure_queue) < 4:
@@ -324,9 +328,8 @@ class Tetris:
                         self.field[Line_Y_Position + 2][j] = 0
                         self.field[Line_Y_Position + 3][j] = 0
                         self.field[Line_Y_Position + 4][j] = 0
+                        self.field[Line_Y_Position + 5][j] = 0
                         Line_Length = 0
-
-
 
         if not Vertical_Line_Break_Mode:
             for i in range(1, self.height):
@@ -615,11 +618,9 @@ def Shift_Playing_Field(game):
             #Field[0][9] = 0
             game.field = Field
 
-Pause_Game = False
 Saved_Field = game.field
 # Main game infinite loop
 while not done:
-
     if game.figure is None:
         game.new_figure()
         last_figure_appearance = pygame.time.Clock()
@@ -827,9 +828,11 @@ while not done:
     small_font = pygame.font.SysFont("Calibri", 10, True, False)#65
     text                  = font.render("Score: " + str(game.score), True, BLACK)
     if(gs.tamer != None):
-        ai_text               = font.render(gs.tamer.state, True, BLACK)
+        #ai_text               = font.render(gs.tamer.state, True, BLACK)
+        ai_text           = font.render('', True, BLACK)
     else:
-        ai_text           = font.render('AI. Off', True, BLACK)
+        #ai_text           = font.render('AI. Off', True, BLACK)
+        ai_text           = font.render('', True, BLACK)
         
     runtime_text          = font.render(" RunTime: " + str(int(current_time-StartTime)),True,BLACK)
     text_game_over        = font1.render("Game Over", True, (255, 125, 0))
@@ -883,17 +886,20 @@ while not done:
                 Column_Count += 0.25
             number_of_games_played += 1
             game.numGames          += 1
+        Saved_Field = game.Empty_Field
+        Pause_Game = True
 
     # Control Text
     Control_Text = font.render("CONTROLS", True, (0, 0, 0))
-    Left_Text = small_font.render("Left Arrow - Go Left", True, (0, 0, 0))
-    Up_Text = small_font.render("Up Arrow - Rotate Piece", True, (0, 0, 0))
-    Right_Text = small_font.render("Right Arrow - Go Left", True, (0, 0, 0))
-    Down_Text = small_font.render("Down Arrow - Go Down", True, (0, 0, 0))
+    Left_Text = small_font.render("← - Go Left", True, (0, 0, 0))
+    Up_Text = small_font.render("↑ - Rotate Piece", True, (0, 0, 0))
+    Right_Text = small_font.render("→ - Go Right", True, (0, 0, 0))
+    Down_Text = small_font.render("↓ - Go Down", True, (0, 0, 0))
     AI_Text = small_font.render("A Key - Toggle A.I", True, (0, 0, 0))
     Encourage_Text = small_font.render("J Key - Encourage A.I", True, (0, 0, 0))
     Discourage_Text = small_font.render("K Key - Discourage A.I", True, (0, 0, 0))
     Vertical_Toggle_Text = small_font.render("T Key - Vertical Mode", True, (0, 0, 0))
+    Pause_Toggle_Text = font.render("Press P to Start the Game", True, (0, 0, 0))
 
     screen.blit(text, [0, 0])
     screen.blit(ai_text,[0, 19])
@@ -908,6 +914,8 @@ while not done:
     screen.blit(Encourage_Text, [0, 200])
     screen.blit(Discourage_Text, [0, 220])
     screen.blit(Vertical_Toggle_Text, [0, 240])
+    if Pause_Game:
+        screen.blit(Pause_Toggle_Text, [105, 30])
 
     pygame.display.flip()
     clock.tick(fps)
@@ -921,5 +929,6 @@ while not done:
                     # If the player paused the game we need to reset the field to what it was before
                     Pause_Game = False
                     game.field = Saved_Field
+                    pygame.event.clear()
 pygame.quit()
 
