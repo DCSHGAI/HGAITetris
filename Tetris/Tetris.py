@@ -330,6 +330,7 @@ class Tetris:
                         self.field[Line_Y_Position + 4][j] = 0
                         self.field[Line_Y_Position + 5][j] = 0
                         Line_Length = 0
+                        game.score += 1
 
         if not Vertical_Line_Break_Mode:
             for i in range(1, self.height):
@@ -929,6 +930,5 @@ while not done:
                     # If the player paused the game we need to reset the field to what it was before
                     Pause_Game = False
                     game.field = Saved_Field
-                    pygame.event.clear()
+                    pressing_down = False
 pygame.quit()
-
