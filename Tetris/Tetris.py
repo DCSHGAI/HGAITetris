@@ -330,7 +330,7 @@ class Tetris:
                         self.field[Line_Y_Position + 4][j] = 0
                         self.field[Line_Y_Position + 5][j] = 0
                         Line_Length = 0
-                        game.score += 1
+                        game.score += 11
 
         if not Vertical_Line_Break_Mode:
             for i in range(1, self.height):
@@ -822,7 +822,7 @@ while not done:
             tmp = game_stats[s]
             textfile.write(str(tmp[0]) + "," + str(tmp[1]) + "," + str(tmp[2]) + "\n")
         textfile.close()
-        done = True
+        #done = True
         
     font                  = pygame.font.SysFont("Calibri", 18, True, False)#25
     font1                 = pygame.font.SysFont("Calibri", 65, True, False)#65
