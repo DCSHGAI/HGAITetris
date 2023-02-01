@@ -24,8 +24,8 @@ except:
     print("Could not import Pygame!")
 
 # These are default values that can be modified in the config file
-game_speed_modifier   = 100
-upper_speed_bound     = 0.1
+#game_speed_modifier   = 100
+#upper_speed_bound     = 0.1
 queue_size            = 4
 game_id               = 0
 Is_Master             = False
@@ -330,7 +330,7 @@ class Tetris:
                         self.field[Line_Y_Position + 4][j] = 0
                         self.field[Line_Y_Position + 5][j] = 0
                         Line_Length = 0
-                        game.score += 11
+                        game.score += 1
 
         if not Vertical_Line_Break_Mode:
             for i in range(1, self.height):
@@ -514,7 +514,7 @@ number_of_games_played = 0
 last_figure_appearance = -1
 done  = False
 clock = pygame.time.Clock()
-fps   = 30
+fps   = 35
 game  = Tetris(Row_Count, Column_Count)
 StartTime = time.time()
 counter   = 0
@@ -625,7 +625,7 @@ while not done:
     if game.figure is None:
         game.new_figure()
         last_figure_appearance = pygame.time.Clock()
-    counter += game_speed_modifier
+    counter += 1
     if counter > 100000:
         counter = 0
 
@@ -660,10 +660,7 @@ while not done:
     gs.GameStateEvaluation(game,events)
     
     #if runQuick == False:
-        #if game.playAI:
-        #    time.sleep(game_speed_modifier)
-        #if Speed_Increase:
-        #    game.go_down()
+        #pygame.time.wait(500)
     
     prevx = game.figure.x
     prevy = game.figure.y
@@ -672,6 +669,7 @@ while not done:
         if counter % (fps // game.level // 2) == 0 or pressing_down:
             if game.state == "start":
                 game.go_down()
+                
 
     # Listens for keypresses and calls their respective functions
     for event in events:
@@ -813,16 +811,6 @@ while not done:
                         ],
                     )
 
-    ## TIME MEASUREMENT
-    current_time = time.time()
-    if current_time-StartTime > 360:
-        game_stats.append([game.numGames, game.numPieces, game.score])
-        textfile = open("gameStats" + str(game.gameid) + ".csv", "w")
-        for s in range(len(game_stats)):
-            tmp = game_stats[s]
-            textfile.write(str(tmp[0]) + "," + str(tmp[1]) + "," + str(tmp[2]) + "\n")
-        textfile.close()
-        #done = True
         
     font                  = pygame.font.SysFont("Calibri", 18, True, False)#25
     font1                 = pygame.font.SysFont("Calibri", 65, True, False)#65
@@ -835,7 +823,7 @@ while not done:
         #ai_text           = font.render('AI. Off', True, BLACK)
         ai_text           = font.render('', True, BLACK)
         
-    runtime_text          = font.render(" RunTime: " + str(int(current_time-StartTime)),True,BLACK)
+    #runtime_text          = font.render(" RunTime: " + str(int(current_time-StartTime)),True,BLACK)
     text_game_over        = font1.render("Game Over", True, (255, 125, 0))
     text_game_over1       = font1.render("Press ESC", True, (255, 215, 0))
     text_last_button_used = font.render(last_move, True, (0, 0, 0))
@@ -901,10 +889,16 @@ while not done:
     Discourage_Text = small_font.render("K Key - Discourage A.I", True, (0, 0, 0))
     Vertical_Toggle_Text = small_font.render("T Key - Vertical Mode", True, (0, 0, 0))
     Pause_Toggle_Text = font.render("Press P to Start the Game", True, (0, 0, 0))
+    AI_Status_ON_Text = font.render("A.I ON", True, (0, 0, 0))
+    AI_Status_OFF_Text = font.render("A.I OFF", True, (0, 0, 0))
 
     screen.blit(text, [0, 0])
     screen.blit(ai_text,[0, 19])
-    screen.blit(text_last_button_used, [0, 38]) #50
+    if game.playAI:
+        screen.blit(AI_Status_ON_Text, [0, 38])
+    else:
+        screen.blit(AI_Status_OFF_Text, [0, 38])
+    #screen.blit(text_last_button_used, [0, 38]) #50
     #screen.blit(runtime_text,[0,57])
     screen.blit(Control_Text, [0, 80])
     screen.blit(Up_Text, [0, 100])
@@ -920,6 +914,12 @@ while not done:
 
     pygame.display.flip()
     clock.tick(fps)
+
+    # Write all the game info
+    events = str(pygame.event.get)
+    textfile = open("gameStats" + str(game.gameid) + ".csv", "a")
+    textfile.write(str(sum(game.field, [])) + ", " + str(game.figure.type) + ", " + events + '\n')
+    
 
     while Pause_Game:
         pygame.display.flip()
