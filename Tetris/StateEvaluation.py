@@ -177,7 +177,7 @@ class Tamer2:
         textfile.close()
         self.classState = 'Saved ' + str(len(self.record)) + ' Samples'
 
-checkPointPath = "tamer.hdf5"
+checkPointPath = "model\\tamerA.hdf5"
 global tamer#          = None#Tamer2(10)
 global gameSym
 
@@ -186,7 +186,7 @@ gameSym = None
 #tamer.load_weights(checkPointPath)
 #gameSym = ts.TetrisSym(20,10)
 
-def GameStateEvaluation(game,events):
+def GameStateEvaluation(game,events,Vertical_Line_Break_Mode,current_key):
     global tamer
     global gameSym
         
@@ -206,18 +206,26 @@ def GameStateEvaluation(game,events):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_s:
                 #SAVE WEIGHTS & DATA
-                tamer.save_weights("model\\tamer" + str(game.gameid) + ".hdf5")
-                tamer.save_data("data\\dataRun" + str(game.gameid) + ".csv")
+                tamer.save_weights("model\\tamer" + str(current_key) + ".hdf5")
+                #tamer.save_data("data\\dataRun" + str(game.gameid) + ".csv")
             
             if event.key == pygame.K_l:
                 #LOAD DATA & BATCH TRAIN
-                tamer.load_data("data\\")
+                #tamer.load_data("data\\")
+                try:
+                    tamer.load_weights("model//tamer"+str(current_key)+".hdf5")
+                except:
+                    tamer = Tamer2(game.width)
             
-            if event.key == pygame.K_b:
-                #BATCH DATA
-                tamer.batch_backward()
+            # if event.key == pygame.K_b:
+            #     #BATCH DATA
+            #     tamer.batch_backward()
+                
+            if event.key == pygame.K_r:
+                tamer = Tamer2(game.width)
                 
     if game.playAI:
+        gameSym.Vertical_Line_Break_Mode = Vertical_Line_Break_Mode
         #if tamer == None:
         #    tamer = Tamer2(game.width)
             
@@ -299,10 +307,10 @@ def GameStateEvaluation(game,events):
             elif action_now == 3:
                 game.rotate()
             else:
-                pygame.time.wait(900)
+                #pygame.time.wait(900)
                 game.go_down()
         else:
-            pygame.time.wait(900)
+            #pygame.time.wait(900)
             game.go_down()  
         tamer.state = 'AI = On; ' + tamer.classState
     else:

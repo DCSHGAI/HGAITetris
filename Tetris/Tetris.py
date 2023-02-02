@@ -322,15 +322,21 @@ class Tetris:
                     else:
                         Line_Y_Position = i
                         Line_Length = 0
-                    if Line_Length >= 5:
-                        self.field[Line_Y_Position][j] = 0
-                        self.field[Line_Y_Position + 1][j] = 0
-                        self.field[Line_Y_Position + 2][j] = 0
-                        self.field[Line_Y_Position + 3][j] = 0
-                        self.field[Line_Y_Position + 4][j] = 0
-                        self.field[Line_Y_Position + 5][j] = 0
-                        Line_Length = 0
-                        game.score += 11
+                    if Line_Length >= 10:
+                        for jj in range(0,11):
+                            nJ = Line_Y_Position+jj
+                            if(nJ<self.height):
+                                self.field[nJ][j] = 0
+                        #self.field[Line_Y_Position][j] = 0
+                        #self.field[Line_Y_Position + 1][j] = 0
+                        #self.field[Line_Y_Position + 2][j] = 0
+                        #self.field[Line_Y_Position + 3][j] = 0
+                        #self.field[Line_Y_Position + 4][j] = 0
+                        #self.field[Line_Y_Position + 5][j] = 0
+                        lines+=1
+                        #Line_Length = 0
+                        #game.score += 11
+            game.score += lines*lines
 
         if not Vertical_Line_Break_Mode:
             for i in range(1, self.height):
@@ -365,13 +371,14 @@ class Tetris:
                                 if(self.field[i1][j] == 7):
                                     return
                                 self.field[i1][j] = self.field[i1 - 1][j]
-                    game.score += 1
+                    #game.score += 1
+                    game.score += lines*lines
 
                     if Activate_Hidden_Rule:
                         Find_Area(self)
 
             # This is the base scoring system move or change this to modify how your score updates
-            self.update_score(lines**2)
+            #self.update_score(lines**2)
 
     # Controls for the game
 
@@ -620,6 +627,7 @@ def Shift_Playing_Field(game):
             game.field = Field
 
 Saved_Field = game.field
+current_key = 0
 # Main game infinite loop
 while not done:
     if game.figure is None:
@@ -657,11 +665,11 @@ while not done:
 
     # GET COPY OF EVENTS
     events = pygame.event.get()
-    gs.GameStateEvaluation(game,events)
+    gs.GameStateEvaluation(game,events,Vertical_Line_Break_Mode,current_key)
     
-    #if runQuick == False:
-        #if game.playAI:
-        #    time.sleep(game_speed_modifier)
+    if runQuick == False:
+        if game.playAI:
+            time.sleep(0.25)
         #if Speed_Increase:
         #    game.go_down()
     
@@ -679,6 +687,54 @@ while not done:
             done = True
 
         if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_1:
+                ShouldAddInvincibleRowsTypeTwo = False
+                ShouldAddInvincibleRowsTypeThree = False
+                if(ShouldAddInvincibleRowsTypeOne == True):
+                    ShouldAddInvincibleRowsTypeOne = False
+                else:
+                    ShouldAddInvincibleRowsTypeOne = True
+                    
+            # if event.key == pygame.K_2:
+            #     ShouldAddInvincibleRowsTypeOne = False
+            #     ShouldAddInvincibleRowsTypeThree = False
+            #     if(ShouldAddInvincibleRowsTypeTwo == True):
+            #         ShouldAddInvincibleRowsTypeTwo = False
+            #     else:
+            #         ShouldAddInvincibleRowsTypeTwo = True
+            
+            # if event.key == pygame.K_3:
+            #     ShouldAddInvincibleRowsTypeOne = False
+            #     ShouldAddInvincibleRowsTypeTwo = False
+            #     if(ShouldAddInvincibleRowsTypeThree == True):
+            #         ShouldAddInvincibleRowsTypeThree = False
+            #     else:
+            #         ShouldAddInvincibleRowsTypeThree = True
+            
+            if event.key == pygame.K_4:
+                current_key = 4
+                
+            if event.key == pygame.K_5:
+                current_key = 5
+            
+            if event.key == pygame.K_6:
+                current_key = 6
+            
+            if event.key == pygame.K_7:
+                current_key = 7
+            
+            if event.key == pygame.K_8:
+                current_key = 8
+            
+            if event.key == pygame.K_9:
+                current_key = 9
+                
+            if event.key == pygame.K_h:
+                current_key = 20
+                
+            if event.key == pygame.K_v:
+                current_key = 10
+                
             if event.key == pygame.K_UP:
                 game.rotate()
                 last_move   = 'rotate'
@@ -815,14 +871,14 @@ while not done:
 
     ## TIME MEASUREMENT
     current_time = time.time()
-    if current_time-StartTime > 360:
-        game_stats.append([game.numGames, game.numPieces, game.score])
-        textfile = open("gameStats" + str(game.gameid) + ".csv", "w")
-        for s in range(len(game_stats)):
-            tmp = game_stats[s]
-            textfile.write(str(tmp[0]) + "," + str(tmp[1]) + "," + str(tmp[2]) + "\n")
-        textfile.close()
-        #done = True
+    # if current_time-StartTime > 360:
+    #     game_stats.append([game.numGames, game.numPieces, game.score])
+    #     textfile = open("gameStats" + str(game.gameid) + ".csv", "w")
+    #     for s in range(len(game_stats)):
+    #         tmp = game_stats[s]
+    #         textfile.write(str(tmp[0]) + "," + str(tmp[1]) + "," + str(tmp[2]) + "\n")
+    #     textfile.close()
+    #     #done = True
         
     font                  = pygame.font.SysFont("Calibri", 18, True, False)#25
     font1                 = pygame.font.SysFont("Calibri", 65, True, False)#65
@@ -888,7 +944,8 @@ while not done:
             number_of_games_played += 1
             game.numGames          += 1
         Saved_Field = game.Empty_Field
-        Pause_Game = True
+        if game.playAI == False:
+            Pause_Game = True
 
     # Control Text
     Control_Text = font.render("CONTROLS", True, (0, 0, 0))
@@ -901,6 +958,15 @@ while not done:
     Discourage_Text = small_font.render("K Key - Discourage A.I", True, (0, 0, 0))
     Vertical_Toggle_Text = small_font.render("T Key - Vertical Mode", True, (0, 0, 0))
     Pause_Toggle_Text = font.render("Press P to Start the Game", True, (0, 0, 0))
+    
+    current_key_text = small_font.render("Current Key "+str(current_key),True,(0,0,0))
+    ai_status_text   = small_font.render("AI Status " + str(game.playAI),True,(0,0,0))
+    if(Vertical_Line_Break_Mode):
+        version_text = small_font.render("Game Version - Vertical",True,(0,0,0))
+    else:
+        version_text = small_font.render("Game Version - Horizontal",True,(0,0,0))
+    
+    
 
     screen.blit(text, [0, 0])
     screen.blit(ai_text,[0, 19])
@@ -915,6 +981,11 @@ while not done:
     screen.blit(Encourage_Text, [0, 200])
     screen.blit(Discourage_Text, [0, 220])
     screen.blit(Vertical_Toggle_Text, [0, 240])
+    
+    screen.blit(current_key_text,[0,260])
+    screen.blit(ai_status_text,[0,280])
+    screen.blit(version_text,[0,300])
+    
     if Pause_Game:
         screen.blit(Pause_Toggle_Text, [105, 30])
 

@@ -5,11 +5,11 @@ GameSpeed
 QueueSize
 4
 HiddenRule
-False,True,False,True,False,True,False,True,False,True,False,True
+False,False,False,False,False,False,False,False,False,False,False,False
 HiddenPiece
-False,False,True,True,False,False,True,True,False,False,False,True
+False,False,False,False,False,False,False,False,False,False,False,False
 IncreaseSpeedOverTime
-False,False,False,False,False,True,True,True,True,True,True,True
+False,False,False,False,False,False,False,False,False,False,False,False
 TimeToActivateHiddenPiece=25
 checkpointpath
 tamer.hdf5
