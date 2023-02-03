@@ -87,6 +87,21 @@ class TetrisSym:
         if self.use_all_dynamics:
                 
             if not self.Vertical_Line_Break_Mode:
+                # for i in range(1, self.height):
+                #     zeros = 0
+                #     for j in range(self.width):
+                #         if board[i][j] == 0:
+                #             zeros += 1
+                        
+                #     if zeros == 0:
+                #         lines += 1
+                #         for i1 in range(i, 1, -1):
+                #             for j in range(self.width):
+                #                 if(board[i1][j] == 7):
+                #                     return
+                #                 board[i1][j] = board[i1 - 1][j]
+                                    
+                                    
                 for i in range(1, self.height):
                     zeros = 0
                     for j in range(self.width):
@@ -103,19 +118,16 @@ class TetrisSym:
                     Line_Length = 0
                     Line_Y_Position = 0
                     for i in range(0, self.height):
-                        if board[i][j] != 0:
+                        if board[i][j] != 0 and board[i][j] != 7:
                             Line_Length += 1
                         else:
                             Line_Y_Position = i
                             Line_Length = 0
                         if Line_Length >= 10:
-                            board[Line_Y_Position][j] = 0
-                            board[Line_Y_Position + 1][j] = 0
-                            board[Line_Y_Position + 2][j] = 0
-                            board[Line_Y_Position + 3][j] = 0
-                            board[Line_Y_Position + 4][j] = 0
-                            board[Line_Y_Position + 5][j] = 0
-                            Line_Length = 0
+                            for jj in range(0,11):
+                                nJ = Line_Y_Position+jj
+                                if(nJ<self.height):
+                                    board[nJ][j] = 0
                         
         return board
         # This is the base scoring system move or change this to modify how your score updates

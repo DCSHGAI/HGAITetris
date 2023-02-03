@@ -314,7 +314,7 @@ class Tetris:
                 Line_Length = 0
                 Line_Y_Position = 0
                 for i in range(0, self.height):
-                    if self.field[i][j] != 0:
+                    if self.field[i][j] != 0 and self.field[i][j] != 7:
                         Line_Length += 1
                     else:
                         Line_Y_Position = i
@@ -654,7 +654,7 @@ while not done:
 
     # GET COPY OF EVENTS
     events = pygame.event.get()
-    gs.GameStateEvaluation(game,events,Vertical_Line_Break_Mode,current_key)
+    tamerFilename = gs.GameStateEvaluation(game,events,Vertical_Line_Break_Mode,current_key,runQuick)
     
     #if runQuick == False:
         #pygame.time.wait(500)
@@ -882,7 +882,7 @@ while not done:
     text_game_over        = font1.render("Game Over", True, (255, 125, 0))
     text_game_over1       = font1.render("Press ESC", True, (255, 215, 0))
     text_last_button_used = font.render(last_move, True, (0, 0, 0))
-
+    
 
     if (
         game.should_flash_reward_text
@@ -950,6 +950,7 @@ while not done:
     Version_Text_Vertical = small_font.render("Vertical Mode", True, (0, 0, 0))
     Version_Text_Horizontal = small_font.render("Horizontal Mode", True, (0, 0, 0))
 
+    ai_weights = small_font.render("AI "+tamerFilename,True,(0,0,0))
     screen.blit(text, [0, 0])
     screen.blit(ai_text,[0, 19])
     if game.playAI:
@@ -969,6 +970,7 @@ while not done:
         screen.blit(Version_Text_Vertical, [0,300])
     else:
         screen.blit(Version_Text_Horizontal, [0,300])
+    screen.blit(ai_weights,[0,320])
     
 
     
@@ -980,8 +982,8 @@ while not done:
 
     # Write all the game info
     events = str(pygame.event.get)
-    textfile = open("gameStats" + str(game.gameid) + ".csv", "a")
-    textfile.write(str(sum(game.field, [])) + ", " + str(game.figure.type) + ", " + events + '\n')
+    #textfile = open("gameStats" + str(game.gameid) + ".csv", "a")
+    #textfile.write(str(sum(game.field, [])) + ", " + str(game.figure.type) + ", " + events + '\n')
     
 
     while Pause_Game:

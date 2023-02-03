@@ -31,6 +31,7 @@ class Tamer2:
         self.numSamples             = 0
         self.state                  = ''
         self.compileModel()
+        self.filename               = 'None'
 
     #COMPILE BASIC MODEL
     def compileModel(self, optimizer=None, learning_rate=0.001, metrics=[]):
@@ -63,6 +64,7 @@ class Tamer2:
         if self.compiled == True:
             self.model.load_weights(filepath)
             self.classState = 'Weights Loaded'
+            self.filename   = filepath
 
 
     #SAVE WEIGHTS FILE
@@ -186,7 +188,7 @@ gameSym = None
 #tamer.load_weights(checkPointPath)
 #gameSym = ts.TetrisSym(20,10)
 
-def GameStateEvaluation(game,events,Vertical_Line_Break_Mode,current_key):
+def GameStateEvaluation(game,events,Vertical_Line_Break_Mode,current_key,rq):
     global tamer
     global gameSym
         
@@ -311,7 +313,10 @@ def GameStateEvaluation(game,events,Vertical_Line_Break_Mode,current_key):
                 game.go_down()
         else:
             game.go_down()  
+        if(rq==False): 
+            pygame.time.wait(450)
         tamer.state = 'AI = On; ' + tamer.classState
     else:
         tamer.state = 'AI = Off; ' + tamer.classState
+    return tamer.filename
     
