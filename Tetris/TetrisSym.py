@@ -35,6 +35,8 @@ class TetrisSym:
     numGames  = 0
     numPieces = 0
     playAI    = False
+    Vertical_Line_Break_Mode = False
+    use_all_dynamics = True
     
 
     def __init__(self, height, width):
@@ -82,16 +84,39 @@ class TetrisSym:
     ## SIMULATION FUNCTION
     def break_linesSym(self, board):
         lines = 0
-        for i in range(1, self.height):
-            zeros = 0
-            for j in range(self.width):
-                if board[i][j] == 0:
-                    zeros += 1
-            if zeros == 0:
-                lines += 1
-                for i1 in range(i, 1, -1):
+        if self.use_all_dynamics:
+                
+            if not self.Vertical_Line_Break_Mode:
+                for i in range(1, self.height):
+                    zeros = 0
                     for j in range(self.width):
-                        board[i1][j] = board[i1 - 1][j]
+                        if board[i][j] == 0:
+                            zeros += 1
+                    if zeros == 0:
+                        lines += 1
+                        for i1 in range(i, 1, -1):
+                            for j in range(self.width):
+                                board[i1][j] = board[i1 - 1][j]
+             
+            if self.Vertical_Line_Break_Mode:
+                for j in range(self.width):
+                    Line_Length = 0
+                    Line_Y_Position = 0
+                    for i in range(0, self.height):
+                        if board[i][j] != 0:
+                            Line_Length += 1
+                        else:
+                            Line_Y_Position = i
+                            Line_Length = 0
+                        if Line_Length >= 10:
+                            board[Line_Y_Position][j] = 0
+                            board[Line_Y_Position + 1][j] = 0
+                            board[Line_Y_Position + 2][j] = 0
+                            board[Line_Y_Position + 3][j] = 0
+                            board[Line_Y_Position + 4][j] = 0
+                            board[Line_Y_Position + 5][j] = 0
+                            Line_Length = 0
+                        
         return board
         # This is the base scoring system move or change this to modify how your score updates
         self.update_score(lines**2)
