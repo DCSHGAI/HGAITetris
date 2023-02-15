@@ -313,8 +313,8 @@ def GameStateEvaluation(game,events,Vertical_Line_Break_Mode,current_key,rq):
                 game.go_down()
         else:
             game.go_down()  
-        if(rq==False): 
-            pygame.time.wait(450)
+        #if(rq==False): 
+            #pygame.time.wait(450)
         tamer.state = 'AI = On; ' + tamer.classState
     else:
         tamer.state = 'AI = Off; ' + tamer.classState
