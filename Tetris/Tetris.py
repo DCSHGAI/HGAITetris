@@ -1,54 +1,42 @@
-# HGAI Tetris
+﻿# HGAI Tetris
 # Unlimited Rights assigned to the U.S. Government
 # This material may be reproduced by or for the U.S Government pursuant to the copyright license under the clause at DFARS 252.227-7014.
 # This notice must appear in all copies of this file and its derivatives.
 # Modified by Bryce Bartlett
 # Original code from https://levelup.gitconnected.com/writing-tetris-in-python-2a16bddb5318
 
+from dataclasses import field
 from inspect import BlockFinder
 import os
-from typing import Counter
 import random
-import platform
 import sys
 import re
 import time
-try:
-    import tensorflow
-    import numpy
-    import StateEvaluation as gs
-except:
-    print('Problem importing Tamer/StateEvaluation... Importing blank StateEvaluation instead')
-    import StateEvaluationBlank as gs
+import numpy
+import StateEvaluation as gs
 
 try:
     import pygame
 except:
-    print("Could not import Pygame! Have you run pip install pygame?")
-
-# This is an optional import that allows you to switch panels with the number keys (Windows Only)
-try:
-    from pywinauto import Application
-except ImportError:
-    print("Could not import pywinauto! Have you run pip install pywinauto?")
-    print("Pywinauto is not required and only for Windows but will allow you to switch Tetris panels if installed.")
+    print("Could not import Pygame!")
 
 # These are default values that can be modified in the config file
-game_speed_modifier   = 100
-upper_speed_bound     = 0.1
+#game_speed_modifier   = 100
+#upper_speed_bound     = 0.1
 queue_size            = 4
 game_id               = 0
 Is_Master             = False
 Should_Load_Model     = False
-Activate_Hidden_Rule  = True
-Activate_Hidden_Piece = True
+Activate_Hidden_Rule  = False
+Activate_Hidden_Piece = False
 Activate_Hidden_Delay = 60
 Speed_Increase        = False
 hidden_piece_timer_elapsed = False
 Activate_Immovable_Piece = False
+Vertical_Line_Break_Mode = True
 ShouldAddInvincibleRowsTypeOne = False
 ShouldAddInvincibleRowsTypeTwo = False
-ShouldAddInvincibleRowsTypeThree = True
+ShouldAddInvincibleRowsTypeThree = False
 Tetris_Board_X = 100
 Tetris_Board_Y = 60
 X_Offset       = 100
@@ -58,6 +46,8 @@ Row_Count      = 20
 Column_Count   = 10
 TetrisBoardYLowBound = 60
 TickCounterForInvincibleRows = 30
+Pause_Game = True
+Saved_Field = []
 pygame.init()
 
 # Use the number keys 0-9 to toggle between windows
@@ -136,7 +126,8 @@ class Figure:
         else:
             self.type = random.randint(0, len(self.figures) - 2)
         self.color = random.randint(1, len(colors) - 2)
-        self.rotation = 0
+        self.rotation = 0       
+
 
     def image(self):
         return self.figures[self.type][self.rotation]
@@ -215,7 +206,7 @@ if len(sys.argv) > 1:
 else:
     pygame.display.set_caption("ARL A.I Tetris " + str(game_id))
 
-Read_Config()
+#Read_Config()
 
 # Game representation
 class Tetris:
@@ -248,6 +239,7 @@ class Tetris:
     New_Figure_Created = False
     Shift_Playing_Field_Up = True
     Current_Shift_Level = 1
+    Empty_Field = []
 
     def __init__(self, height, width):
         self.height = height
@@ -257,12 +249,12 @@ class Tetris:
         self.reward = 0
         self.state = "start"
         self.numPieces = 0
-
         for i in range(height):
             new_line = []
             for j in range(width):
                 new_line.append(0)
             self.field.append(new_line)
+        self.Empty_Field = self.field
 
     def new_figure(self):
         while len(self.figure_queue) < 4:
@@ -292,22 +284,6 @@ class Tetris:
         return intersection
 
     def break_lines(self):
-        # lines = 0
-        # for i in range(1, self.height):
-        #     zeros = 0
-        #     for j in range(self.width):
-        #         if self.field[i][j] == 0:
-        #             zeros += 1
-        #     if zeros == 0:
-        #         lines += 1
-        #         for i1 in range(i, 1, -1):
-        #             for j in range(self.width):
-        #                 # Everything is being shifted down by one but if it is immovable prevent it from shifting.
-        #                 if(self.field[i1][j] != 6 and self.field[i1-1][j] != 6):
-        #                     self.field[i1][j] = self.field[i1 - 1][j]
-        #         if Activate_Hidden_Rule:
-        #             Find_Area(self)
-        
         #SG BOMB TEST
         ## BOMB DYNAMICS
         ## 1. BOMBS DELETE WHAT THEY TOUCH BEFORE YOU GET POINTS
@@ -320,7 +296,6 @@ class Tetris:
                         self.field[i][j] = 0
                         if i < self.height-1 :
                             self.field[i+1][j] = 0
-            
             for i in range(self.height):
                 for j in range(self.width):
                     if self.field[i][j] == 100:
@@ -334,43 +309,65 @@ class Tetris:
         ##      3.2 FORMING AN ENTIRE ROW OF BRICKS (this is a necessity)
         ##   4. BRICKS ARE HARD CODED TO A COLOR
         lines = 0
-        for i in range(1, self.height):
-            zeros = 0
-            brcks = 0
+        if Vertical_Line_Break_Mode:
             for j in range(self.width):
-                if self.field[i][j] == 0:
-                    zeros += 1
-                if self.field[i][j] == 6:
-                    brcks += 1
-            if zeros == 0:
-                bricks = []
-                if brcks==self.width:
-                    for j in range(self.width):
-                        bricks.append(1)
-                else:
-                    for j in range(self.width):
-                        bricks.append(self.field[i][j])
-                    
-                lines += 1
-                for i1 in range(i, 1, -1):
-                    for j in range(self.width):
-                        if enableBombs:
-                            # Everything is being shifted down by one but if it is immovable prevent it from shifting.
-                            if(bricks[j] != 6 and self.field[i1 - 1][j] != 6):
-                                self.field[i1][j] = self.field[i1 - 1][j]
-                        if Activate_Immovable_Piece:
-                            if(bricks[j] != 6 and self.field[i1 - 1][j] == 6):
-                                self.field[i1][j] = 0
-                                bricks[j] = 6
-                        else:
-                            if(self.field[i1][j] == 7):
-                                return
-                            self.field[i1][j] = self.field[i1 - 1][j]
-                if Activate_Hidden_Rule:
-                    Find_Area(self)
+                Line_Length = 0
+                Line_Y_Position = 0
+                for i in range(0, self.height):
+                    if self.field[i][j] != 0 and self.field[i][j] != 7:
+                        Line_Length += 1
+                    else:
+                        Line_Y_Position = i
+                        Line_Length = 0
+                    if Line_Length >= 10:
+                        for jj in range(0,11):
+                            nJ = Line_Y_Position+jj
+                            if(nJ<self.height):
+                                self.field[nJ][j] = 0
+                        lines+=1
+            game.score += lines*lines
 
-        # This is the base scoring system move or change this to modify how your score updates
-        self.update_score(lines**2)
+        if not Vertical_Line_Break_Mode:
+            for i in range(1, self.height):
+                zeros = 0
+                brcks = 0
+                for j in range(self.width):
+                    if self.field[i][j] == 0:
+                        zeros += 1
+                    if self.field[i][j] == 6:
+                        brcks += 1
+                if zeros == 0:
+                    bricks = []
+                    if brcks==self.width:
+                        for j in range(self.width):
+                            bricks.append(1)
+                    else:
+                        for j in range(self.width):
+                            bricks.append(self.field[i][j])
+                    
+                    lines += 1
+                    for i1 in range(i, 1, -1):
+                        for j in range(self.width):
+                            if enableBombs:
+                                # Everything is being shifted down by one but if it is immovable prevent it from shifting.
+                                if(bricks[j] != 6 and self.field[i1 - 1][j] != 6):
+                                    self.field[i1][j] = self.field[i1 - 1][j]
+                            if Activate_Immovable_Piece:
+                                if(bricks[j] != 6 and self.field[i1 - 1][j] == 6):
+                                    self.field[i1][j] = 0
+                                    bricks[j] = 6
+                            else:
+                                if(self.field[i1][j] == 7):
+                                    return
+                                self.field[i1][j] = self.field[i1 - 1][j]
+                    #game.score += 1
+                    game.score += lines*lines
+
+                    if Activate_Hidden_Rule:
+                        Find_Area(self)
+
+            # This is the base scoring system move or change this to modify how your score updates
+            #self.update_score(lines**2)
 
     # Controls for the game
 
@@ -385,7 +382,6 @@ class Tetris:
 
     def go_down(self):
         game.newFig = 0
-
         self.lastMove = 0  # GO DOWN
         self.figure.y += 1
         if self.intersects():
@@ -449,7 +445,7 @@ class Tetris:
     # Draw rectangles off to the right to represent the next 3 shapes in the queue.
     def draw_queue(self, figure, position_in_queue, screen):
         color = colors[figure.color]
-        xo    = X_Offset + (self.width - 10) * 25
+        xo    = 25
         if figure.type == 0:
             # Column
             pygame.draw.rect(
@@ -514,7 +510,7 @@ number_of_games_played = 0
 last_figure_appearance = -1
 done  = False
 clock = pygame.time.Clock()
-fps   = 30
+fps   = 35
 game  = Tetris(Row_Count, Column_Count)
 StartTime = time.time()
 counter   = 0
@@ -553,7 +549,6 @@ def Find_Area(game):
         if Area > 40 and Area < 50:
             game.score += 100
             game.should_flash_reward_text = True
-
 
 # Shift the playing field up or down
 def Shift_Playing_Field(game):
@@ -620,13 +615,14 @@ def Shift_Playing_Field(game):
             #Field[0][9] = 0
             game.field = Field
 
+Saved_Field = game.field
+current_key = 0
 # Main game infinite loop
 while not done:
-    move = False
     if game.figure is None:
         game.new_figure()
         last_figure_appearance = pygame.time.Clock()
-    counter += game_speed_modifier
+    counter += 1
     if counter > 100000:
         counter = 0
 
@@ -658,13 +654,10 @@ while not done:
 
     # GET COPY OF EVENTS
     events = pygame.event.get()
-    gs.GameStateEvaluation(game,events)
+    tamerFilename = gs.GameStateEvaluation(game,events,Vertical_Line_Break_Mode,current_key,runQuick)
     
-    if runQuick == False:
-        if game.playAI:
-            time.sleep(game_speed_modifier)
-        if Speed_Increase:
-            game.go_down()
+    #if runQuick == False:
+        #pygame.time.wait(500)
     
     prevx = game.figure.x
     prevy = game.figure.y
@@ -673,13 +666,62 @@ while not done:
         if counter % (fps // game.level // 2) == 0 or pressing_down:
             if game.state == "start":
                 game.go_down()
+                
 
     # Listens for keypresses and calls their respective functions
     for event in events:
         if event.type == pygame.QUIT:
             done = True
-        
+
         if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_1:
+                ShouldAddInvincibleRowsTypeTwo = False
+                ShouldAddInvincibleRowsTypeThree = False
+                if(ShouldAddInvincibleRowsTypeOne == True):
+                    ShouldAddInvincibleRowsTypeOne = False
+                else:
+                    ShouldAddInvincibleRowsTypeOne = True
+                    
+            # if event.key == pygame.K_2:
+            #     ShouldAddInvincibleRowsTypeOne = False
+            #     ShouldAddInvincibleRowsTypeThree = False
+            #     if(ShouldAddInvincibleRowsTypeTwo == True):
+            #         ShouldAddInvincibleRowsTypeTwo = False
+            #     else:
+            #         ShouldAddInvincibleRowsTypeTwo = True
+            
+            # if event.key == pygame.K_3:
+            #     ShouldAddInvincibleRowsTypeOne = False
+            #     ShouldAddInvincibleRowsTypeTwo = False
+            #     if(ShouldAddInvincibleRowsTypeThree == True):
+            #         ShouldAddInvincibleRowsTypeThree = False
+            #     else:
+            #         ShouldAddInvincibleRowsTypeThree = True
+            
+            if event.key == pygame.K_4:
+                current_key = 4
+                
+            if event.key == pygame.K_5:
+                current_key = 5
+            
+            if event.key == pygame.K_6:
+                current_key = 6
+            
+            if event.key == pygame.K_7:
+                current_key = 7
+            
+            if event.key == pygame.K_8:
+                current_key = 8
+            
+            if event.key == pygame.K_9:
+                current_key = 9
+                
+            if event.key == pygame.K_h:
+                current_key = 20
+                
+            if event.key == pygame.K_v:
+                current_key = 10
+                
             if event.key == pygame.K_UP:
                 game.rotate()
                 last_move   = 'rotate'
@@ -708,7 +750,11 @@ while not done:
             if event.key == pygame.K_ESCAPE:
                 game.newFig   = 0
                 game.lastMove = 0
-                
+
+            if event.key == pygame.K_p:
+                Pause_Game = True
+                Saved_Field = game.field
+
                 cc    = int(Column_Count)
                 nsize = [500+(cc-10)*25,500]
                 if nsize[0] != size[0] or nsize[1] != size[1]:
@@ -737,6 +783,12 @@ while not done:
                 else:
                     game.playAI = False
                 last_move = "Toggle AI"
+
+            if event.key == pygame.K_t:
+                if Vertical_Line_Break_Mode:
+                    Vertical_Line_Break_Mode = False
+                else:
+                    Vertical_Line_Break_Mode = True
                 
             if event.key == pygame.K_q:
                 if runQuick == True:
@@ -761,28 +813,6 @@ while not done:
                     + "\n"
                 )
                 textfile.close()
-            # Used number keys to switch panels if they exist
-            
-            if event.key == pygame.K_0 and platform.system() == "Windows":
-                Set_Focus(0)
-            if event.key == pygame.K_1 and platform.system() == "Windows":
-                Set_Focus(1)
-            if event.key == pygame.K_2 and platform.system() == "Windows":
-                Set_Focus(2)
-            if event.key == pygame.K_3 and platform.system() == "Windows":
-                Set_Focus(3)
-            if event.key == pygame.K_4 and platform.system() == "Windows":
-                Set_Focus(4)
-            if event.key == pygame.K_5 and platform.system() == "Windows":
-                Set_Focus(5)
-            if event.key == pygame.K_6 and platform.system() == "Windows":
-                Set_Focus(6)
-            if event.key == pygame.K_7 and platform.system() == "Windows":
-                Set_Focus(7)
-            if event.key == pygame.K_8 and platform.system() == "Windows":
-                Set_Focus(8)
-            if event.key == pygame.K_9 and platform.system() == "Windows":
-                Set_Focus(9)
 
     if event.type == pygame.KEYUP:
         if event.key == pygame.K_DOWN:
@@ -828,28 +858,31 @@ while not done:
 
     ## TIME MEASUREMENT
     current_time = time.time()
-    if current_time-StartTime > 360:
-        game_stats.append([game.numGames, game.numPieces, game.score])
-        textfile = open("gameStats" + str(game.gameid) + ".csv", "w")
-        for s in range(len(game_stats)):
-            tmp = game_stats[s]
-            textfile.write(str(tmp[0]) + "," + str(tmp[1]) + "," + str(tmp[2]) + "\n")
-        textfile.close()
-        done = True
+    # if current_time-StartTime > 360:
+    #     game_stats.append([game.numGames, game.numPieces, game.score])
+    #     textfile = open("gameStats" + str(game.gameid) + ".csv", "w")
+    #     for s in range(len(game_stats)):
+    #         tmp = game_stats[s]
+    #         textfile.write(str(tmp[0]) + "," + str(tmp[1]) + "," + str(tmp[2]) + "\n")
+    #     textfile.close()
+    #     #done = True
         
     font                  = pygame.font.SysFont("Calibri", 18, True, False)#25
     font1                 = pygame.font.SysFont("Calibri", 65, True, False)#65
+    small_font = pygame.font.SysFont("Calibri", 10, True, False)#65
     text                  = font.render("Score: " + str(game.score), True, BLACK)
     if(gs.tamer != None):
-        ai_text               = font.render(gs.tamer.state, True, BLACK)
+        #ai_text               = font.render(gs.tamer.state, True, BLACK)
+        ai_text           = font.render('', True, BLACK)
     else:
-        ai_text           = font.render('AI. Off', True, BLACK)
+        #ai_text           = font.render('AI. Off', True, BLACK)
+        ai_text           = font.render('', True, BLACK)
         
-    runtime_text          = font.render("RunTime: " + str(int(current_time-StartTime)),True,BLACK)
+    #runtime_text          = font.render(" RunTime: " + str(int(current_time-StartTime)),True,BLACK)
     text_game_over        = font1.render("Game Over", True, (255, 125, 0))
     text_game_over1       = font1.render("Press ESC", True, (255, 215, 0))
     text_last_button_used = font.render(last_move, True, (0, 0, 0))
-
+    
 
     if (
         game.should_flash_reward_text
@@ -868,7 +901,6 @@ while not done:
     # Activate the hidden rule after specified delay in config file
     if counter > Activate_Hidden_Delay:
         hidden_piece_timer_elapsed = True
-
     if game.figure_queue[0].type is not None:
         game.draw_queue(game.figure_queue[0], 0, screen)
     if game.figure_queue[1].type is not None:
@@ -898,13 +930,70 @@ while not done:
                 Column_Count += 0.25
             number_of_games_played += 1
             game.numGames          += 1
+        Saved_Field = game.Empty_Field
+        if game.playAI == False:
+            Pause_Game = True
 
+    # Control Text
+    Control_Text = font.render("CONTROLS", True, (0, 0, 0))
+    Left_Text = small_font.render("← - Go Left", True, (0, 0, 0))
+    Up_Text = small_font.render("↑ - Rotate Piece", True, (0, 0, 0))
+    Right_Text = small_font.render("→ - Go Right", True, (0, 0, 0))
+    Down_Text = small_font.render("↓ - Go Down", True, (0, 0, 0))
+    AI_Text = small_font.render("A Key - Toggle A.I", True, (0, 0, 0))
+    Encourage_Text = small_font.render("J Key - Encourage A.I", True, (0, 0, 0))
+    Discourage_Text = small_font.render("K Key - Discourage A.I", True, (0, 0, 0))
+    Vertical_Toggle_Text = small_font.render("T Key - Vertical Mode", True, (0, 0, 0))
+    Pause_Toggle_Text = font.render("Press P to Start the Game", True, (0, 0, 0))
+    AI_Status_ON_Text = font.render("A.I ON", True, (0, 0, 0))
+    AI_Status_OFF_Text = font.render("A.I OFF", True, (0, 0, 0))
+    Version_Text_Vertical = small_font.render("Vertical Mode", True, (0, 0, 0))
+    Version_Text_Horizontal = small_font.render("Horizontal Mode", True, (0, 0, 0))
+
+    ai_weights = small_font.render("AI "+tamerFilename,True,(0,0,0))
     screen.blit(text, [0, 0])
     screen.blit(ai_text,[0, 19])
-    screen.blit(text_last_button_used, [0, 38]) #50
-    screen.blit(runtime_text,[0,57])
+    if game.playAI:
+        screen.blit(AI_Status_ON_Text, [0, 38])
+    else:
+        screen.blit(AI_Status_OFF_Text, [0, 38])
+    screen.blit(Control_Text, [0, 80])
+    screen.blit(Up_Text, [0, 100])
+    screen.blit(Left_Text, [0, 120])
+    screen.blit(Right_Text, [0, 140])
+    screen.blit(Down_Text, [0, 160])
+    screen.blit(AI_Text, [0, 180])
+    screen.blit(Encourage_Text, [0, 200])
+    screen.blit(Discourage_Text, [0, 220])
+    screen.blit(Vertical_Toggle_Text, [0, 240])
+    if Vertical_Line_Break_Mode:
+        screen.blit(Version_Text_Vertical, [0,300])
+    else:
+        screen.blit(Version_Text_Horizontal, [0,300])
+    screen.blit(ai_weights,[0,320])
     
+
+    
+    if Pause_Game:
+        screen.blit(Pause_Toggle_Text, [105, 30])
+
     pygame.display.flip()
     clock.tick(fps)
-       
+
+    # Write all the game info
+    events = str(pygame.event.get)
+    #textfile = open("gameStats" + str(game.gameid) + ".csv", "a")
+    #textfile.write(str(sum(game.field, [])) + ", " + str(game.figure.type) + ", " + events + '\n')
+    
+
+    while Pause_Game:
+        pygame.display.flip()
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_p:
+                    # If the player paused the game we need to reset the field to what it was before
+                    Pause_Game = False
+                    game.field = Saved_Field
+                    pressing_down = False
 pygame.quit()
