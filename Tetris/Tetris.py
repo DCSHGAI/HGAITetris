@@ -6,12 +6,14 @@
 # Original code from https://levelup.gitconnected.com/writing-tetris-in-python-2a16bddb5318
 
 from dataclasses import field
+from distutils import text_file
 from inspect import BlockFinder
 import os
 import random
 import sys
 import re
 import time
+from tkinter import W
 import numpy
 import StateEvaluation as gs
 
@@ -617,6 +619,8 @@ def Shift_Playing_Field(game):
 
 Saved_Field = game.field
 current_key = 0
+textfile = open("gameStats" + str(game.gameid) + ".csv", "a")
+
 # Main game infinite loop
 while not done:
     if game.figure is None:
@@ -908,13 +912,14 @@ while not done:
     if game.figure_queue[2].type is not None:
         game.draw_queue(game.figure_queue[2], 2, screen)
     if game.state == "gameover":
-        game.Current_Shift_Level = 1
-        game_stats.append([game.numGames, game.numPieces, game.score])
-        textfile = open("gameStats" + str(game.gameid) + ".csv", "w")
-        for s in range(len(game_stats)):
-            tmp = game_stats[s]
-            textfile.write(str(tmp[0]) + "," + str(tmp[1]) + "," + str(tmp[2]) + "\n")
-        textfile.close()
+        print("Game Over")
+        #game.Current_Shift_Level = 1
+        #game_stats.append([game.numGames, game.numPieces, game.score])
+        #textfile = open("gameStats" + str(game.gameid) + ".csv", "w")
+        #for s in range(len(game_stats)):
+        #    tmp = game_stats[s]
+        #    textfile.write(str(tmp[0]) + "," + str(tmp[1]) + "," + str(tmp[2]) + "\n")
+        #textfile.close()
         
         if auto_restart:
             
@@ -981,9 +986,18 @@ while not done:
     clock.tick(fps)
 
     # Write all the game info
+
+    wgts  = gs.tamer.model.layers[1].get_weights()[0]
+    bias  = gs.tamer.model.layers[1].get_weights()[1]
+
+    WGTS = numpy.zeros([1, 47])
+    for a in range(len(wgts)):
+        WGTS[0,a] = wgts[a,0]
+    WGTS[0,46] = bias[0]
     events = str(pygame.event.get)
-    #textfile = open("gameStats" + str(game.gameid) + ".csv", "a")
-    #textfile.write(str(sum(game.field, [])) + ", " + str(game.figure.type) + ", " + events + '\n')
+    
+    if not (textfile.closed):
+        textfile.write(str(sum(game.field, [])) + ", Figure: " + str(game.figure.type) + ", Start Time: " + str(StartTime) + ", Time:" + str(time.time()) + ", Score: " + str(Tetris.score) + ", Weights: " + str(sum(wgts, [])) + ", Bias: " + str(sum(bias, [])) + ", Game Count: " + str(gameCounter) + ", Gamemode: " +  '\n')
     
 
     while Pause_Game:
