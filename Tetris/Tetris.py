@@ -913,6 +913,7 @@ while not done:
         game.draw_queue(game.figure_queue[2], 2, screen)
     if game.state == "gameover":
         print("Game Over")
+        gameCounter += 1
         #game.Current_Shift_Level = 1
         #game_stats.append([game.numGames, game.numPieces, game.score])
         #textfile = open("gameStats" + str(game.gameid) + ".csv", "w")
@@ -997,7 +998,7 @@ while not done:
     events = str(pygame.event.get)
     
     if not (textfile.closed):
-        textfile.write(str(sum(game.field, [])) + ", Figure: " + str(game.figure.type) + ", Start Time: " + str(StartTime) + ", Time:" + str(time.time()) + ", Score: " + str(Tetris.score) + ", Weights: " + str(sum(wgts, [])) + ", Bias: " + str(sum(bias, [])) + ", Game Count: " + str(gameCounter) + ", Gamemode: " +  '\n')
+        textfile.write(str(sum(game.field, [])) + ", Figure: " + str(game.figure.type) + ", Start Time: " + str(StartTime) + ", Time:" + str(time.time()) + ", Score: " + str(Tetris.score) + ", Weights: " + str(wgts).replace('\n', '').replace(' ','') + ", Bias: " + str(bias).replace('\n', '').replace(' ','') + ", Game Count: " + str(gameCounter) + ", Vertical Mode: " + str(Vertical_Line_Break_Mode) + '\n')
     
 
     while Pause_Game:
@@ -1011,3 +1012,4 @@ while not done:
                     game.field = Saved_Field
                     pressing_down = False
 pygame.quit()
+textfile.close()
