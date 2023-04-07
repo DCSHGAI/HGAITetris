@@ -14,6 +14,7 @@ import sys
 import re
 import time
 from tkinter import W
+import time
 import numpy
 import StateEvaluation as gs
 
@@ -50,6 +51,7 @@ TetrisBoardYLowBound = 60
 TickCounterForInvincibleRows = 30
 Pause_Game = True
 Saved_Field = []
+StartTime = time.time()
 pygame.init()
 
 # Use the number keys 0-9 to toggle between windows
@@ -512,7 +514,7 @@ number_of_games_played = 0
 last_figure_appearance = -1
 done  = False
 clock = pygame.time.Clock()
-fps   = 35
+fps   = 10
 game  = Tetris(Row_Count, Column_Count)
 StartTime = time.time()
 counter   = 0
@@ -632,7 +634,7 @@ while not done:
 
     # Oscillating Rows Control: Modifiable via TetrisBoardYLowBound and ShouldAddInvincibleRowsTypeTwo in the config file
     if ShouldAddInvincibleRowsTypeThree == True and counter % TickCounterForInvincibleRows == 0:
-                        # Set upper limit and reverse
+        # Set upper limit and reverse
         if(game.Current_Shift_Level >= 10):
             game.Shift_Playing_Field_Up = False
         if(game.Current_Shift_Level <= 4):
@@ -640,7 +642,7 @@ while not done:
         Shift_Playing_Field(game)
 
     if ShouldAddInvincibleRowsTypeTwo == True and counter % TickCounterForInvincibleRows == 0:
-                # Set upper limit and reverse
+        # Set upper limit and reverse
         if(game.Current_Shift_Level >= 10):
             game.Shift_Playing_Field_Up = False
         if(game.Current_Shift_Level <= 4):
@@ -678,6 +680,10 @@ while not done:
             done = True
 
         if event.type == pygame.KEYDOWN:
+
+            if not (textfile.closed):
+                textfile.write(event.unicode)
+
             if event.key == pygame.K_1:
                 ShouldAddInvincibleRowsTypeTwo = False
                 ShouldAddInvincibleRowsTypeThree = False
@@ -860,16 +866,7 @@ while not done:
                         ],
                     )
 
-    ## TIME MEASUREMENT
     current_time = time.time()
-    # if current_time-StartTime > 360:
-    #     game_stats.append([game.numGames, game.numPieces, game.score])
-    #     textfile = open("gameStats" + str(game.gameid) + ".csv", "w")
-    #     for s in range(len(game_stats)):
-    #         tmp = game_stats[s]
-    #         textfile.write(str(tmp[0]) + "," + str(tmp[1]) + "," + str(tmp[2]) + "\n")
-    #     textfile.close()
-    #     #done = True
         
     font                  = pygame.font.SysFont("Calibri", 18, True, False)#25
     font1                 = pygame.font.SysFont("Calibri", 65, True, False)#65
@@ -887,7 +884,6 @@ while not done:
     text_game_over1       = font1.render("Press ESC", True, (255, 215, 0))
     text_last_button_used = font.render(last_move, True, (0, 0, 0))
     
-
     if (
         game.should_flash_reward_text
         and game.reward_text_flash_counter < game.reward_text_flash_time
@@ -912,15 +908,8 @@ while not done:
     if game.figure_queue[2].type is not None:
         game.draw_queue(game.figure_queue[2], 2, screen)
     if game.state == "gameover":
-        print("Game Over")
         gameCounter += 1
-        #game.Current_Shift_Level = 1
-        #game_stats.append([game.numGames, game.numPieces, game.score])
-        #textfile = open("gameStats" + str(game.gameid) + ".csv", "w")
-        #for s in range(len(game_stats)):
-        #    tmp = game_stats[s]
-        #    textfile.write(str(tmp[0]) + "," + str(tmp[1]) + "," + str(tmp[2]) + "\n")
-        #textfile.close()
+        game.Current_Shift_Level = 1
         
         if auto_restart:
             
@@ -953,35 +942,41 @@ while not done:
     Pause_Toggle_Text = font.render("Press P to Start the Game", True, (0, 0, 0))
     AI_Status_ON_Text = font.render("A.I ON", True, (0, 0, 0))
     AI_Status_OFF_Text = font.render("A.I OFF", True, (0, 0, 0))
-    Version_Text_Vertical = small_font.render("Vertical Mode", True, (0, 0, 0))
-    Version_Text_Horizontal = small_font.render("Horizontal Mode", True, (0, 0, 0))
-
+    Version_Text_Vertical = font.render("Vertical Mode", True, (0, 0, 0))
+    Version_Text_Horizontal = font.render("Horizontal Mode", True, (0, 0, 0))
     ai_weights = small_font.render("AI "+tamerFilename,True,(0,0,0))
+    Time_Label_Text = font.render("Time:", True, (0,0,0))
+    Time_Text = font.render(str(round(time.time() - StartTime, 2)), True, (0, 0, 0))
+    
+    screen.blit(Time_Label_Text, [150, 0])
+    screen.blit(Time_Text, [200,0])
+
     screen.blit(text, [0, 0])
     screen.blit(ai_text,[0, 19])
     if game.playAI:
         screen.blit(AI_Status_ON_Text, [0, 38])
+        screen.blit(Encourage_Text, [0, 200])
+        screen.blit(Discourage_Text, [0, 220])
+        screen.blit(ai_weights,[0,320])
+
     else:
         screen.blit(AI_Status_OFF_Text, [0, 38])
-    screen.blit(Control_Text, [0, 80])
-    screen.blit(Up_Text, [0, 100])
-    screen.blit(Left_Text, [0, 120])
-    screen.blit(Right_Text, [0, 140])
-    screen.blit(Down_Text, [0, 160])
+        screen.blit(Up_Text, [0, 100])
+        screen.blit(Left_Text, [0, 120])
+        screen.blit(Right_Text, [0, 140])
+        screen.blit(Down_Text, [0, 160])
     screen.blit(AI_Text, [0, 180])
-    screen.blit(Encourage_Text, [0, 200])
-    screen.blit(Discourage_Text, [0, 220])
     screen.blit(Vertical_Toggle_Text, [0, 240])
-    if Vertical_Line_Break_Mode:
-        screen.blit(Version_Text_Vertical, [0,300])
-    else:
-        screen.blit(Version_Text_Horizontal, [0,300])
-    screen.blit(ai_weights,[0,320])
-    
+    screen.blit(Control_Text, [0, 80])
 
     
     if Pause_Game:
         screen.blit(Pause_Toggle_Text, [105, 30])
+    else:
+        if Vertical_Line_Break_Mode:
+            screen.blit(Version_Text_Vertical, [105,30])
+        else:
+            screen.blit(Version_Text_Horizontal, [105,30])
 
     pygame.display.flip()
     clock.tick(fps)
@@ -995,12 +990,10 @@ while not done:
     for a in range(len(wgts)):
         WGTS[0,a] = wgts[a,0]
     WGTS[0,46] = bias[0]
-    events = str(pygame.event.get)
-    
-    if not (textfile.closed):
-        textfile.write(str(sum(game.field, [])) + ", Figure: " + str(game.figure.type) + ", Start Time: " + str(StartTime) + ", Time:" + str(time.time()) + ", Score: " + str(Tetris.score) + ", Weights: " + str(wgts).replace('\n', '').replace(' ','') + ", Bias: " + str(bias).replace('\n', '').replace(' ','') + ", Game Count: " + str(gameCounter) + ", Vertical Mode: " + str(Vertical_Line_Break_Mode) + '\n')
-    
 
+    if not (textfile.closed):
+        textfile.write(str(sum(game.field, [])) + ", Figure: " + str(game.figure.type) + ", Start Time: " + str(StartTime) + ", Time:" + str(time.time()) + ", Score: " + str(game.score) + ", Weights: " + str(wgts).replace('\n', '').replace(' ','') + ", Bias: " + str(bias).replace('\n', '').replace(' ','') + ", Game Count: " + str(gameCounter) + ", Vertical Mode: " + str(Vertical_Line_Break_Mode) + '\n')
+    
     while Pause_Game:
         pygame.display.flip()
         events = pygame.event.get()
