@@ -36,7 +36,7 @@ Activate_Hidden_Delay = 60
 Speed_Increase        = False
 hidden_piece_timer_elapsed = False
 Activate_Immovable_Piece = False
-Vertical_Line_Break_Mode = True
+Vertical_Line_Break_Mode = False
 ShouldAddInvincibleRowsTypeOne = False
 ShouldAddInvincibleRowsTypeTwo = False
 ShouldAddInvincibleRowsTypeThree = False
@@ -52,6 +52,8 @@ TickCounterForInvincibleRows = 30
 Pause_Game = True
 Saved_Field = []
 StartTime = time.time()
+GameProgress = 0
+GameCanProgress = False
 pygame.init()
 
 # Use the number keys 0-9 to toggle between windows
@@ -735,22 +737,22 @@ while not done:
             if event.key == pygame.K_UP:
                 game.rotate()
                 last_move   = 'rotate'
-                game.playAI = False
+                #game.playAI = False
     
             if event.key == pygame.K_DOWN:
                 pressing_down = True
                 last_move     = "down"
-                game.playAI   = False
+                #game.playAI   = False
                 
             if event.key == pygame.K_LEFT:
                 game.go_side(-1)
                 last_move   = "left"
-                game.playAI = False
+                #game.playAI = False
                 
             if event.key == pygame.K_RIGHT:
                 game.go_side(1)
                 last_move   = "right"
-                game.playAI = False
+                #game.playAI = False
                 
             if event.key == pygame.K_SPACE:
                 game.go_space()
@@ -869,25 +871,19 @@ while not done:
     current_time = time.time()
         
     font                  = pygame.font.SysFont("Calibri", 18, True, False)#25
-    font1                 = pygame.font.SysFont("Calibri", 65, True, False)#65
     small_font = pygame.font.SysFont("Calibri", 10, True, False)#65
-    text                  = font.render("Score: " + str(game.score), True, BLACK)
+    text                  = font.render("Total Score: " + str(game.score), True, BLACK)
+
     if(gs.tamer != None):
-        #ai_text               = font.render(gs.tamer.state, True, BLACK)
         ai_text           = font.render('', True, BLACK)
     else:
-        #ai_text           = font.render('AI. Off', True, BLACK)
         ai_text           = font.render('', True, BLACK)
         
-    #runtime_text          = font.render(" RunTime: " + str(int(current_time-StartTime)),True,BLACK)
-    text_game_over        = font1.render("Game Over", True, (255, 125, 0))
-    text_game_over1       = font1.render("Press ESC", True, (255, 215, 0))
+    text_game_over        = font.render("Game Over", True, (255, 125, 0))
+    text_game_over1       = font.render("Press ESC", True, (255, 215, 0))
     text_last_button_used = font.render(last_move, True, (0, 0, 0))
     
-    if (
-        game.should_flash_reward_text
-        and game.reward_text_flash_counter < game.reward_text_flash_time
-    ):
+    if (game.should_flash_reward_text and game.reward_text_flash_counter < game.reward_text_flash_time):
         if game.reward_text_flash_counter % 2 == 0:
             #reward_text = font.render("Reward: " + str(game.reward), True, RED)
             text        = font.render("Score: " + str(game.score), True, RED)
@@ -897,6 +893,20 @@ while not done:
         text        = font.render("Score: " + str(game.score), True, BLACK)
         game.should_flash_reward_text = False
         game.reward_text_flash_counter = 0
+
+    # Game Progress
+    if (int(time.time() - StartTime) % 20 == 0) and GameCanProgress:
+        GameProgress += 1
+        GameCanProgress = False
+        if GameProgress == 1:
+            Vertical_Line_Break_Mode = True
+        if GameProgress == 2:
+            game.playAI = True
+            Vertical_Line_Break_Mode = False
+        if GameProgress == 3:
+            game.playAI = True
+            Vertical_Line_Break_Mode = True
+        Pause_Game = True
 
     # Activate the hidden rule after specified delay in config file
     if counter > Activate_Hidden_Delay:
@@ -930,6 +940,7 @@ while not done:
             Pause_Game = True
 
     # Control Text
+    Game_Count_Text = font.render("Game Count:", True, (0, 0, 0))
     Control_Text = font.render("CONTROLS", True, (0, 0, 0))
     Left_Text = small_font.render("← - Go Left", True, (0, 0, 0))
     Up_Text = small_font.render("↑ - Rotate Piece", True, (0, 0, 0))
@@ -938,45 +949,47 @@ while not done:
     AI_Text = small_font.render("A Key - Toggle A.I", True, (0, 0, 0))
     Encourage_Text = small_font.render("J Key - Encourage A.I", True, (0, 0, 0))
     Discourage_Text = small_font.render("K Key - Discourage A.I", True, (0, 0, 0))
-    Vertical_Toggle_Text = small_font.render("T Key - Vertical Mode", True, (0, 0, 0))
+    #Vertical_Toggle_Text = small_font.render("Vertical Mode", True, (0, 0, 0))
     Pause_Toggle_Text = font.render("Press P to Start the Game", True, (0, 0, 0))
-    AI_Status_ON_Text = font.render("A.I ON", True, (0, 0, 0))
-    AI_Status_OFF_Text = font.render("A.I OFF", True, (0, 0, 0))
+    #AI_Status_ON_Text = font.render("A.I ON", True, (0, 0, 0))
+    #AI_Status_OFF_Text = font.render("A.I OFF", True, (0, 0, 0))
     Version_Text_Vertical = font.render("Vertical Mode", True, (0, 0, 0))
     Version_Text_Horizontal = font.render("Horizontal Mode", True, (0, 0, 0))
     ai_weights = small_font.render("AI "+tamerFilename,True,(0,0,0))
     Time_Label_Text = font.render("Time:", True, (0,0,0))
     Time_Text = font.render(str(round(time.time() - StartTime, 2)), True, (0, 0, 0))
     
+    screen.blit(Game_Count_Text, [0, 20])
     screen.blit(Time_Label_Text, [150, 0])
     screen.blit(Time_Text, [200,0])
 
     screen.blit(text, [0, 0])
     screen.blit(ai_text,[0, 19])
     if game.playAI:
-        screen.blit(AI_Status_ON_Text, [0, 38])
+        #screen.blit(AI_Status_ON_Text, [0, 38])
         screen.blit(Encourage_Text, [0, 200])
         screen.blit(Discourage_Text, [0, 220])
         screen.blit(ai_weights,[0,320])
 
     else:
-        screen.blit(AI_Status_OFF_Text, [0, 38])
+        #screen.blit(AI_Status_OFF_Text, [0, 38])
         screen.blit(Up_Text, [0, 100])
         screen.blit(Left_Text, [0, 120])
         screen.blit(Right_Text, [0, 140])
         screen.blit(Down_Text, [0, 160])
     screen.blit(AI_Text, [0, 180])
-    screen.blit(Vertical_Toggle_Text, [0, 240])
+    #screen.blit(Vertical_Toggle_Text, [0, 240])
     screen.blit(Control_Text, [0, 80])
 
     
     if Pause_Game:
-        screen.blit(Pause_Toggle_Text, [105, 30])
+        screen.blit(Pause_Toggle_Text, [105, 40])
+        pygame.display.flip()
     else:
         if Vertical_Line_Break_Mode:
-            screen.blit(Version_Text_Vertical, [105,30])
+            screen.blit(Version_Text_Vertical, [140,30])
         else:
-            screen.blit(Version_Text_Horizontal, [105,30])
+            screen.blit(Version_Text_Horizontal, [140,30])
 
     pygame.display.flip()
     clock.tick(fps)
@@ -997,6 +1010,7 @@ while not done:
     while Pause_Game:
         pygame.display.flip()
         events = pygame.event.get()
+        GameCanProgress = True
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_p:
