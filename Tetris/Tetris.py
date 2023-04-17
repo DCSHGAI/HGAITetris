@@ -941,10 +941,10 @@ while not done:
     Time_Text = font.render(str(round(time.time() - StartTime, 2)), True, (0, 0, 0))
 
     # Image work
-    Base_Path = os.path.dirname(__file__)
-    Image = os.path.join(Base_Path, "Capture.png")
-    image_1 = pygame.image.load(Image)
-    screen.blit(image_1, (0,0))
+    #Base_Path = os.path.dirname(__file__)
+    #Image = os.path.join(Base_Path, "Capture.png")
+    #image_1 = pygame.image.load(Image)
+    #screen.blit(image_1, (0,0))
     
     screen.blit(Game_Count_Text, [0, 20])
     screen.blit(Time_Label_Text, [150, 0])
