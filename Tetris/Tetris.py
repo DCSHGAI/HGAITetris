@@ -9,6 +9,7 @@ from dataclasses import field
 from distutils import text_file
 from inspect import BlockFinder
 import os
+import copy
 import random
 import sys
 import re
@@ -55,16 +56,6 @@ StartTime = time.time()
 GameProgress = 0
 GameCanProgress = False
 pygame.init()
-
-# Use the number keys 0-9 to toggle between windows
-def Set_Focus(number_to_focus):
-    try:
-        app = Application().connect(title_re="ARL A.I Tetris " + str(number_to_focus))
-        dlg = app.top_window()
-        dlg.set_focus()
-        print("ARL A.I Tetris " + str(number_to_focus))
-    except:
-        print("Game " + str(number_to_focus) + " does not exist.")
 
 # RGB Color definitions
 colors = [
@@ -260,7 +251,6 @@ class Tetris:
             for j in range(width):
                 new_line.append(0)
             self.field.append(new_line)
-        self.Empty_Field = self.field
 
     def new_figure(self):
         while len(self.figure_queue) < 4:
@@ -621,7 +611,6 @@ def Shift_Playing_Field(game):
             #Field[0][9] = 0
             game.field = Field
 
-Saved_Field = game.field
 current_key = 0
 textfile = open("gameStats" + str(game.gameid) + ".csv", "a")
 
@@ -680,6 +669,8 @@ while not done:
     for event in events:
         if event.type == pygame.QUIT:
             done = True
+            pygame.quit()
+            sys.exit()
 
         if event.type == pygame.KEYDOWN:
 
@@ -765,18 +756,6 @@ while not done:
 
             if event.key == pygame.K_p:
                 Pause_Game = True
-                Saved_Field = game.field
-
-                cc    = int(Column_Count)
-                nsize = [500+(cc-10)*25,500]
-                if nsize[0] != size[0] or nsize[1] != size[1]:
-                    screen = pygame.display.set_mode(nsize)
-                    size   = nsize
-                    
-                game.__init__(Row_Count, cc)
-                if resizeGame:
-                    Column_Count += 0.25
-                
                 number_of_games_played += 1
                 game.numGames          = game.numGames + 1
                 last_move              = "restart"
@@ -894,10 +873,12 @@ while not done:
         game.should_flash_reward_text = False
         game.reward_text_flash_counter = 0
 
-    # Game Progress
-    if (int(time.time() - StartTime) % 20 == 0) and GameCanProgress:
+    # Game Progress BLAH
+    if (int(time.time() - StartTime) % 60 == 0) and GameCanProgress:
         GameProgress += 1
         GameCanProgress = False
+        game.score = 0
+        StartTime = time.time()
         if GameProgress == 1:
             Vertical_Line_Break_Mode = True
         if GameProgress == 2:
@@ -940,13 +921,13 @@ while not done:
             Pause_Game = True
 
     # Control Text
-    Game_Count_Text = font.render("Game Count:", True, (0, 0, 0))
+    Game_Count_Text = font.render("Game Count: " + str(number_of_games_played), True, (0, 0, 0))
     Control_Text = font.render("CONTROLS", True, (0, 0, 0))
     Left_Text = small_font.render("← - Go Left", True, (0, 0, 0))
     Up_Text = small_font.render("↑ - Rotate Piece", True, (0, 0, 0))
     Right_Text = small_font.render("→ - Go Right", True, (0, 0, 0))
     Down_Text = small_font.render("↓ - Go Down", True, (0, 0, 0))
-    AI_Text = small_font.render("A Key - Toggle A.I", True, (0, 0, 0))
+    #AI_Text = small_font.render("A Key - Toggle A.I", True, (0, 0, 0))
     Encourage_Text = small_font.render("J Key - Encourage A.I", True, (0, 0, 0))
     Discourage_Text = small_font.render("K Key - Discourage A.I", True, (0, 0, 0))
     #Vertical_Toggle_Text = small_font.render("Vertical Mode", True, (0, 0, 0))
@@ -958,6 +939,12 @@ while not done:
     ai_weights = small_font.render("AI "+tamerFilename,True,(0,0,0))
     Time_Label_Text = font.render("Time:", True, (0,0,0))
     Time_Text = font.render(str(round(time.time() - StartTime, 2)), True, (0, 0, 0))
+
+    # Image work
+    Base_Path = os.path.dirname(__file__)
+    Image = os.path.join(Base_Path, "Capture.png")
+    image_1 = pygame.image.load(Image)
+    screen.blit(image_1, (0,0))
     
     screen.blit(Game_Count_Text, [0, 20])
     screen.blit(Time_Label_Text, [150, 0])
@@ -967,8 +954,8 @@ while not done:
     screen.blit(ai_text,[0, 19])
     if game.playAI:
         #screen.blit(AI_Status_ON_Text, [0, 38])
-        screen.blit(Encourage_Text, [0, 200])
-        screen.blit(Discourage_Text, [0, 220])
+        screen.blit(Encourage_Text, [0, 100])
+        screen.blit(Discourage_Text, [0, 120])
         screen.blit(ai_weights,[0,320])
 
     else:
@@ -977,7 +964,7 @@ while not done:
         screen.blit(Left_Text, [0, 120])
         screen.blit(Right_Text, [0, 140])
         screen.blit(Down_Text, [0, 160])
-    screen.blit(AI_Text, [0, 180])
+    #screen.blit(AI_Text, [0, 180])
     #screen.blit(Vertical_Toggle_Text, [0, 240])
     screen.blit(Control_Text, [0, 80])
 
@@ -1008,15 +995,19 @@ while not done:
         textfile.write(str(sum(game.field, [])) + ", Figure: " + str(game.figure.type) + ", Start Time: " + str(StartTime) + ", Time:" + str(time.time()) + ", Score: " + str(game.score) + ", Weights: " + str(wgts).replace('\n', '').replace(' ','') + ", Bias: " + str(bias).replace('\n', '').replace(' ','') + ", Game Count: " + str(gameCounter) + ", Vertical Mode: " + str(Vertical_Line_Break_Mode) + '\n')
     
     while Pause_Game:
+        game.__init__(Row_Count, Column_Count)
         pygame.display.flip()
         events = pygame.event.get()
         GameCanProgress = True
         for event in events:
+            if event.type == pygame.QUIT:
+                done = True
+                pygame.quit()
+                sys.exit()
+
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_p:
-                    # If the player paused the game we need to reset the field to what it was before
                     Pause_Game = False
-                    game.field = Saved_Field
                     pressing_down = False
 pygame.quit()
 textfile.close()
