@@ -6,15 +6,11 @@
 # Original code from https://levelup.gitconnected.com/writing-tetris-in-python-2a16bddb5318
 
 from dataclasses import field
-from distutils import text_file
 from inspect import BlockFinder
 import os
-import copy
 import random
 import sys
 import re
-import time
-from tkinter import W
 import time
 import numpy
 import StateEvaluation as gs
@@ -196,12 +192,8 @@ def Read_Config():
     except Exception as Reason:
         print("Error Reading Config.txt: " + str(Reason))
 
-# If there aren't arguements just set the panel's name to 1
-if len(sys.argv) > 1:
-    pygame.display.set_caption("ARL A.I Tetris " + str(sys.argv[1]))
-    game_id = int(sys.argv[1])
-else:
-    pygame.display.set_caption("ARL A.I Tetris " + str(game_id))
+
+pygame.display.set_caption("ARL A.I Tetris")
 
 #Read_Config()
 
@@ -361,9 +353,6 @@ class Tetris:
 
                     if Activate_Hidden_Rule:
                         Find_Area(self)
-
-            # This is the base scoring system move or change this to modify how your score updates
-            #self.update_score(lines**2)
 
     # Controls for the game
 
@@ -653,9 +642,6 @@ while not done:
     events = pygame.event.get()
     tamerFilename = gs.GameStateEvaluation(game,events,Vertical_Line_Break_Mode,current_key,runQuick)
     
-    #if runQuick == False:
-        #pygame.time.wait(500)
-    
     prevx = game.figure.x
     prevy = game.figure.y
     
@@ -811,6 +797,7 @@ while not done:
 
     screen.fill(WHITE)
 
+    # Draw the game field
     for i in range(game.height):
         for j in range(game.width):
             pygame.draw.rect(
@@ -927,24 +914,16 @@ while not done:
     Up_Text = small_font.render("↑ - Rotate Piece", True, (0, 0, 0))
     Right_Text = small_font.render("→ - Go Right", True, (0, 0, 0))
     Down_Text = small_font.render("↓ - Go Down", True, (0, 0, 0))
-    #AI_Text = small_font.render("A Key - Toggle A.I", True, (0, 0, 0))
     Encourage_Text = small_font.render("J Key - Encourage A.I", True, (0, 0, 0))
     Discourage_Text = small_font.render("K Key - Discourage A.I", True, (0, 0, 0))
-    #Vertical_Toggle_Text = small_font.render("Vertical Mode", True, (0, 0, 0))
+    Fast_Text = small_font.render("Q - Move Faster", True, (0, 0, 0))
     Pause_Toggle_Text = font.render("Press P to Start the Game", True, (0, 0, 0))
-    #AI_Status_ON_Text = font.render("A.I ON", True, (0, 0, 0))
-    #AI_Status_OFF_Text = font.render("A.I OFF", True, (0, 0, 0))
+    Quit_Out_Text = font.render("Press ESC to Quit the Game", True, (0, 0, 0))
     Version_Text_Vertical = font.render("Vertical Mode", True, (0, 0, 0))
     Version_Text_Horizontal = font.render("Horizontal Mode", True, (0, 0, 0))
     ai_weights = small_font.render("AI "+tamerFilename,True,(0,0,0))
     Time_Label_Text = font.render("Time:", True, (0,0,0))
     Time_Text = font.render(str(round(time.time() - StartTime, 2)), True, (0, 0, 0))
-
-    # Image work
-    #Base_Path = os.path.dirname(__file__)
-    #Image = os.path.join(Base_Path, "Capture.png")
-    #image_1 = pygame.image.load(Image)
-    #screen.blit(image_1, (0,0))
     
     screen.blit(Game_Count_Text, [0, 20])
     screen.blit(Time_Label_Text, [150, 0])
@@ -953,19 +932,16 @@ while not done:
     screen.blit(text, [0, 0])
     screen.blit(ai_text,[0, 19])
     if game.playAI:
-        #screen.blit(AI_Status_ON_Text, [0, 38])
         screen.blit(Encourage_Text, [0, 100])
         screen.blit(Discourage_Text, [0, 120])
         screen.blit(ai_weights,[0,320])
+        screen.blit(Fast_Text, [0,140])
 
     else:
-        #screen.blit(AI_Status_OFF_Text, [0, 38])
         screen.blit(Up_Text, [0, 100])
         screen.blit(Left_Text, [0, 120])
         screen.blit(Right_Text, [0, 140])
         screen.blit(Down_Text, [0, 160])
-    #screen.blit(AI_Text, [0, 180])
-    #screen.blit(Vertical_Toggle_Text, [0, 240])
     screen.blit(Control_Text, [0, 80])
 
     
