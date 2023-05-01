@@ -866,6 +866,7 @@ while not done:
         GameCanProgress = False
         game.score = 0
         StartTime = time.time()
+        pygame.quit()
         if GameProgress == 1:
             Vertical_Line_Break_Mode = True
         if GameProgress == 2:
@@ -888,7 +889,6 @@ while not done:
     if game.state == "gameover":
         gameCounter += 1
         game.Current_Shift_Level = 1
-        
         if auto_restart:
             
             #THIS IS WHERE GAME RESIZING HAPPENS
@@ -917,15 +917,14 @@ while not done:
     Encourage_Text = small_font.render("J Key - Encourage A.I", True, (0, 0, 0))
     Discourage_Text = small_font.render("K Key - Discourage A.I", True, (0, 0, 0))
     Fast_Text = small_font.render("Q - Move Faster", True, (0, 0, 0))
-    Pause_Toggle_Text = font.render("Press P to Start the Game", True, (0, 0, 0))
-    Quit_Out_Text = font.render("Press ESC to Quit the Game", True, (0, 0, 0))
+    Pause_Toggle_Text = font.render("Press P to Start the Game and ESC to exit", True, (0, 0, 0))
     Version_Text_Vertical = font.render("Vertical Mode", True, (0, 0, 0))
     Version_Text_Horizontal = font.render("Horizontal Mode", True, (0, 0, 0))
     ai_weights = small_font.render("AI "+tamerFilename,True,(0,0,0))
     Time_Label_Text = font.render("Time:", True, (0,0,0))
     Time_Text = font.render(str(round(time.time() - StartTime, 2)), True, (0, 0, 0))
     
-    screen.blit(Game_Count_Text, [0, 20])
+    #screen.blit(Game_Count_Text, [0, 20])
     screen.blit(Time_Label_Text, [150, 0])
     screen.blit(Time_Text, [200,0])
 
@@ -946,8 +945,9 @@ while not done:
 
     
     if Pause_Game:
-        screen.blit(Pause_Toggle_Text, [105, 40])
+        screen.blit(Pause_Toggle_Text, [40, 40])
         pygame.display.flip()
+        
     else:
         if Vertical_Line_Break_Mode:
             screen.blit(Version_Text_Vertical, [140,30])
@@ -975,15 +975,19 @@ while not done:
         pygame.display.flip()
         events = pygame.event.get()
         GameCanProgress = True
+
         for event in events:
             if event.type == pygame.QUIT:
                 done = True
                 pygame.quit()
                 sys.exit()
-
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_p:
                     Pause_Game = False
                     pressing_down = False
+                if event.key == pygame.K_ESCAPE:
+                    done = True
+                    pygame.quit()
+                    sys.exit()
 pygame.quit()
 textfile.close()
