@@ -20,9 +20,7 @@ try:
 except:
     print("Could not import Pygame!")
 
-# These are default values that can be modified in the config file
-#game_speed_modifier   = 100
-#upper_speed_bound     = 0.1
+# These are default values that can be modified in the config file (The config file is unused as of the HGAI project)
 queue_size            = 4
 game_id               = 0
 Is_Master             = False
@@ -37,6 +35,7 @@ Vertical_Line_Break_Mode = False
 ShouldAddInvincibleRowsTypeOne = False
 ShouldAddInvincibleRowsTypeTwo = False
 ShouldAddInvincibleRowsTypeThree = False
+Show_Piece_Queue = False
 Tetris_Board_X = 100
 Tetris_Board_Y = 60
 X_Offset       = 100
@@ -51,6 +50,7 @@ Saved_Field = []
 StartTime = time.time()
 GameProgress = 0
 GameCanProgress = False
+Training_Text = "No A.I Horizontal"
 pygame.init()
 
 # RGB Color definitions
@@ -191,7 +191,6 @@ def Read_Config():
             TickCounterForInvincibleRows = int(lines[37])
     except Exception as Reason:
         print("Error Reading Config.txt: " + str(Reason))
-
 
 pygame.display.set_caption("ARL A.I Tetris")
 
@@ -835,7 +834,6 @@ while not done:
                     )
 
     current_time = time.time()
-        
     font                  = pygame.font.SysFont("Calibri", 18, True, False)#25
     small_font = pygame.font.SysFont("Calibri", 10, True, False)#65
     text                  = font.render("Total Score: " + str(game.score), True, BLACK)
@@ -860,13 +858,12 @@ while not done:
         game.should_flash_reward_text = False
         game.reward_text_flash_counter = 0
 
-    # Game Progress BLAH
+    # Game Progress
     if (int(time.time() - StartTime) % 60 == 0) and GameCanProgress:
         GameProgress += 1
         GameCanProgress = False
+        Show_Piece_Queue = False
         game.score = 0
-        StartTime = time.time()
-        pygame.quit()
         if GameProgress == 1:
             Vertical_Line_Break_Mode = True
         if GameProgress == 2:
@@ -880,11 +877,11 @@ while not done:
     # Activate the hidden rule after specified delay in config file
     if counter > Activate_Hidden_Delay:
         hidden_piece_timer_elapsed = True
-    if game.figure_queue[0].type is not None:
+    if game.figure_queue[0].type is not None and Show_Piece_Queue:
         game.draw_queue(game.figure_queue[0], 0, screen)
-    if game.figure_queue[1].type is not None:
+    if game.figure_queue[1].type is not None and Show_Piece_Queue:
         game.draw_queue(game.figure_queue[1], 1, screen)
-    if game.figure_queue[2].type is not None:
+    if game.figure_queue[2].type is not None and Show_Piece_Queue:
         game.draw_queue(game.figure_queue[2], 2, screen)
     if game.state == "gameover":
         gameCounter += 1
@@ -917,19 +914,19 @@ while not done:
     Encourage_Text = small_font.render("J Key - Encourage A.I", True, (0, 0, 0))
     Discourage_Text = small_font.render("K Key - Discourage A.I", True, (0, 0, 0))
     Fast_Text = small_font.render("Q - Move Faster", True, (0, 0, 0))
-    Pause_Toggle_Text = font.render("Press P to Start the Game and ESC to exit", True, (0, 0, 0))
+    Pause_Toggle_Text = font.render("Press P to Start the Game", True, (0, 0, 0))
     Version_Text_Vertical = font.render("Vertical Mode", True, (0, 0, 0))
     Version_Text_Horizontal = font.render("Horizontal Mode", True, (0, 0, 0))
     ai_weights = small_font.render("AI "+tamerFilename,True,(0,0,0))
     Time_Label_Text = font.render("Time:", True, (0,0,0))
     Time_Text = font.render(str(round(time.time() - StartTime, 2)), True, (0, 0, 0))
-    
-    #screen.blit(Game_Count_Text, [0, 20])
+    screen.blit(Game_Count_Text, [0, 20])
     screen.blit(Time_Label_Text, [150, 0])
     screen.blit(Time_Text, [200,0])
-
     screen.blit(text, [0, 0])
     screen.blit(ai_text,[0, 19])
+
+
     if game.playAI:
         screen.blit(Encourage_Text, [0, 100])
         screen.blit(Discourage_Text, [0, 120])
@@ -945,7 +942,7 @@ while not done:
 
     
     if Pause_Game:
-        screen.blit(Pause_Toggle_Text, [40, 40])
+        screen.blit(Pause_Toggle_Text, [110, 40])
         pygame.display.flip()
         
     else:
@@ -974,8 +971,17 @@ while not done:
         game.__init__(Row_Count, Column_Count)
         pygame.display.flip()
         events = pygame.event.get()
-        GameCanProgress = True
+        # This prevents the timer from immediately going off
+        StartTime = time.time() - 1
+        Tutorial_Text = font.render(Training_Text, True, (0,0,0))
+        if GameProgress == 1:
+            Training_Text = "Vertical Training Text"
+        if GameProgress == 2:
+            Training_Text = "Horizontal Training Text"
+        if GameProgress == 3:
+            Training_Text = "A.I Horizontal Text"
 
+        screen.blit(Tutorial_Text, [325,0])
         for event in events:
             if event.type == pygame.QUIT:
                 done = True
@@ -985,6 +991,9 @@ while not done:
                 if event.key == pygame.K_p:
                     Pause_Game = False
                     pressing_down = False
+                    GameCanProgress = True
+                    if not game.playAI:
+                        Show_Piece_Queue = True
                 if event.key == pygame.K_ESCAPE:
                     done = True
                     pygame.quit()
